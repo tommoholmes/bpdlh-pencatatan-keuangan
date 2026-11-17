@@ -128,28 +128,24 @@ describe('push dan pull', () => {
     expect(pulled.hasMore).toBe(false)
   })
 
-  it('memakai last-write-wins berdasarkan updated_at, sementara seq selalu naik', async () => {
-    const token = await signToken({ sub: 'uid-lww' })
-    await push(token, [record({ name: 'Baru', updatedAt: 1_794_800_000_000 })])
+  it('kiriman terakhir selalu menang, urutan updated_at diabaikan', async () => {
+    const token = await signToken({ sub: 'uid-last' })
+    await push(token, [record({ name: 'Pertama', updatedAt: 1_794_800_000_000 })])
 
-    const stale = await push(token, [record({ name: 'Lama', updatedAt: 1_794_700_000_000 })])
+    const stale = await push(token, [record({ name: 'Kedua', updatedAt: 1_794_700_000_000 })])
     expect(stale.serverSeq).toBe(2)
 
-    let pulled = await pull(token)
-    expect(pulled.records[0]).toMatchObject({ name: 'Baru', seq: 2 })
-
-    await push(token, [record({ name: 'Lebih baru', updatedAt: 1_794_900_000_000 })])
-    pulled = await pull(token)
-    expect(pulled.records[0]).toMatchObject({ name: 'Lebih baru', seq: 3 })
+    const pulled = await pull(token)
+    expect(pulled.records[0]).toMatchObject({ name: 'Kedua', updatedAt: 1_794_700_000_000, seq: 2 })
   })
 
-  it('mempertahankan versi server bila updated_at sama', async () => {
+  it('updated_at mengikuti kiriman terakhir', async () => {
     const token = await signToken({ sub: 'uid-tie' })
-    await push(token, [record({ name: 'Server' })])
-    await push(token, [record({ name: 'Klien', updatedAt: 1_794_800_000_000 })])
+    await push(token, [record({ name: 'Pertama', updatedAt: 1_794_800_000_000 })])
+    await push(token, [record({ name: 'Kedua', updatedAt: 1_794_800_000_000 })])
 
     const pulled = await pull(token)
-    expect(pulled.records[0]?.name).toBe('Server')
+    expect(pulled.records[0]?.name).toBe('Kedua')
   })
 
   it('mengirim tombstone lewat pull', async () => {

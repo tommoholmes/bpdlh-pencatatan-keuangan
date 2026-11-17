@@ -18,13 +18,6 @@ ON CONFLICT (user_id, id) DO UPDATE SET
   deleted_at = excluded.deleted_at,
   updated_at = excluded.updated_at,
   seq        = excluded.seq
-WHERE excluded.updated_at > records.updated_at
-`
-
-const SYNC_RECORD_SEQ = `
-UPDATE records
-   SET seq = (SELECT seq FROM users WHERE id = ?1)
- WHERE user_id = ?1 AND id = ?2
 `
 
 interface PushResult {
@@ -74,7 +67,6 @@ export async function pushRecords(env: Env, uid: string, deviceId: string, rawRe
           updatedAt,
           deletedAt,
         ),
-      env.DB.prepare(SYNC_RECORD_SEQ).bind(uid, rec.id),
     )
     applied.push(index)
   })

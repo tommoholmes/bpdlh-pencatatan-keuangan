@@ -7,10 +7,10 @@ import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class Connectivity(context: Context) {
+class Connectivity(context: Context) : ConnectivityState {
     private val manager = context.getSystemService(ConnectivityManager::class.java)
     private val _online = MutableStateFlow(manager.isOnline())
-    val online: StateFlow<Boolean> = _online
+    override val online: StateFlow<Boolean> = _online
 
     init {
         manager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {

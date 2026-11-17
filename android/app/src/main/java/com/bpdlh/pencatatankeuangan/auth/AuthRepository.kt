@@ -8,6 +8,9 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.bpdlh.pencatatankeuangan.BuildConfig
+import com.bpdlh.pencatatankeuangan.data.AuthException
+import com.bpdlh.pencatatankeuangan.data.AuthFailure
+import com.bpdlh.pencatatankeuangan.data.AuthGateway
 import com.bpdlh.pencatatankeuangan.data.Prefs
 import com.bpdlh.pencatatankeuangan.data.SyncScheduler
 import com.bpdlh.pencatatankeuangan.data.remote.SyncApi
@@ -26,10 +29,12 @@ class AuthRepository(
     private val context: Context,
     private val api: SyncApi,
     private val prefs: Prefs,
-) {
+) : AuthGateway {
     private val firebase: FirebaseAuth get() = FirebaseAuth.getInstance()
 
     val currentUser: FirebaseUser? get() = firebase.currentUser
+
+    override val currentUserEmail: String? get() = firebase.currentUser?.email
 
     val session: Flow<FirebaseUser?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { trySend(it.currentUser) }
@@ -37,7 +42,7 @@ class AuthRepository(
         awaitClose { firebase.removeAuthStateListener(listener) }
     }
 
-    suspend fun signInWithGoogle(): Result<Unit> = try {
+    override suspend fun signInWithGoogle(): Result<Unit> = try {
         val manager = CredentialManager.create(context)
         val option = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
@@ -51,22 +56,18 @@ class AuthRepository(
         firebase.signInWithCredential(firebaseCredential).await()
         Result.success(Unit)
     } catch (e: GetCredentialCancellationException) {
-        Result.failure(IllegalStateException("Login dibatalkan."))
+        Result.failure(AuthException(AuthFailure.Cancelled))
     } catch (e: NoCredentialException) {
-        Result.failure(
-            IllegalStateException(
-                "Tidak ada akun Google di perangkat ini. Tambahkan akun lewat Pengaturan Android, lalu coba lagi.",
-            ),
-        )
+        Result.failure(AuthException(AuthFailure.NoAccount))
     } catch (e: GetCredentialException) {
         Log.w("Auth", "Credential Manager gagal", e)
-        Result.failure(IllegalStateException("Login Google gagal: ${e.message ?: e.type}"))
+        Result.failure(AuthException(AuthFailure.GoogleFailed(e.message ?: e.type)))
     } catch (e: Exception) {
         Log.w("Auth", "Login gagal", e)
-        Result.failure(IllegalStateException("Login Google gagal. Periksa koneksi lalu coba lagi."))
+        Result.failure(AuthException(AuthFailure.SignInFailed))
     }
 
-    suspend fun bootstrap(): Result<Unit> = try {
+    override suspend fun bootstrap(): Result<Unit> = try {
         val logId = api.bootstrap()
         prefs.logId = logId
         if (io.sentry.Sentry.isEnabled()) {
@@ -89,8 +90,8 @@ class AuthRepository(
         prefs.clearSession()
         Result.success(Unit)
     } catch (e: FirebaseAuthRecentLoginRequiredException) {
-        Result.failure(IllegalStateException("Sesi sudah lama. Masuk ulang dengan Google, lalu hapus akun lagi."))
+        Result.failure(AuthException(AuthFailure.RecentLoginRequired))
     } catch (e: Exception) {
-        Result.failure(IllegalStateException(e.message ?: "Hapus akun gagal."))
+        Result.failure(AuthException(AuthFailure.DeleteFailed))
     }
 }

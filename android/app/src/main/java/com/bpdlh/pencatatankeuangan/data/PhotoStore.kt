@@ -11,10 +11,10 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
 
-class PhotoStore(private val context: Context) {
+class PhotoStore(private val context: Context) : PhotoLibrary {
     private val dir: File by lazy { File(context.filesDir, "photos").apply { mkdirs() } }
 
-    suspend fun import(uri: Uri): String = withContext(Dispatchers.IO) {
+    override suspend fun import(uri: Uri): String = withContext(Dispatchers.IO) {
         val bitmap = readScaled(uri)
         val file = File(dir, "${UUID.randomUUID()}.jpg")
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 82, it) }
@@ -30,7 +30,7 @@ class PhotoStore(private val context: Context) {
 
     suspend fun read(path: String): ByteArray = withContext(Dispatchers.IO) { File(path).readBytes() }
 
-    fun delete(path: String?) {
+    override fun delete(path: String?) {
         if (path != null) File(path).delete()
     }
 

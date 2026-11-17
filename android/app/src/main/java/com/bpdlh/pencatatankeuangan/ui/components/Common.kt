@@ -21,9 +21,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bpdlh.pencatatankeuangan.R
 import com.bpdlh.pencatatankeuangan.ui.theme.AmountTextStyle
 import com.bpdlh.pencatatankeuangan.ui.theme.LocalStatusColors
 
@@ -60,7 +62,11 @@ fun LedgerRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(role = Role.Button, onClickLabel = "Buka catatan $title", onClick = onClick)
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.records_cd_open, title),
+                onClick = onClick,
+            )
             .defaultMinSize(minHeight = 64.dp)
             .padding(vertical = 12.dp),
     ) {

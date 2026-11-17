@@ -8,7 +8,7 @@ import kotlinx.coroutines.sync.withLock
 data class SyncStatus(
     val running: Boolean = false,
     val lastSyncAt: Long? = null,
-    val lastError: String? = null,
+    val lastError: SyncFailure? = null,
 )
 
 class SyncCoordinator(private val engine: SyncEngine, private val prefs: Prefs) {
@@ -22,7 +22,7 @@ class SyncCoordinator(private val engine: SyncEngine, private val prefs: Prefs) 
         _status.value = SyncStatus(
             running = false,
             lastSyncAt = prefs.lastSyncAt,
-            lastError = (outcome as? SyncOutcome.Failed)?.message,
+            lastError = (outcome as? SyncOutcome.Failed)?.failure,
         )
         outcome
     }

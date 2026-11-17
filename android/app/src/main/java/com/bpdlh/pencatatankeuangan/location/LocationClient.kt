@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.bpdlh.pencatatankeuangan.data.LocationProvider
 import com.bpdlh.pencatatankeuangan.data.PlaceSnapshot
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -11,14 +12,14 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 
-class LocationClient(private val context: Context) {
+class LocationClient(private val context: Context) : LocationProvider {
     private val client by lazy { LocationServices.getFusedLocationProviderClient(context) }
 
-    fun hasPermission(): Boolean =
+    override fun hasPermission(): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    suspend fun requestOnce(timeoutMs: Long = 10_000): PlaceSnapshot {
+    override suspend fun requestOnce(timeoutMs: Long): PlaceSnapshot {
         val empty = PlaceSnapshot(null, null, null)
         if (!hasPermission()) return empty
 

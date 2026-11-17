@@ -46,7 +46,7 @@ fun PencatatanNav(container: AppContainer) {
             Sentry.addBreadcrumb(
                 Breadcrumb().apply {
                     category = "navigation"
-                    message = "layar: ${backStack.lastOrNull()?.let { it::class.simpleName }}"
+                    message = "screen: ${backStack.lastOrNull()?.let { it::class.simpleName }}"
                     level = SentryLevel.INFO
                 },
             )

@@ -40,181 +40,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.bpdlh.pencatatankeuangan.AppContainer
-import com.bpdlh.pencatatankeuangan.data.PlaceSnapshot
+import com.bpdlh.pencatatankeuangan.R
 import com.bpdlh.pencatatankeuangan.ui.components.FieldHint
 import com.bpdlh.pencatatankeuangan.ui.components.LoadingBlock
 import com.bpdlh.pencatatankeuangan.ui.components.PrimaryAction
 import com.bpdlh.pencatatankeuangan.ui.components.SectionLabel
+import com.bpdlh.pencatatankeuangan.ui.asString
 import com.bpdlh.pencatatankeuangan.ui.components.StatusText
-import com.bpdlh.pencatatankeuangan.ui.formatAccuracy
 import com.bpdlh.pencatatankeuangan.ui.formatCoordinate
-import com.bpdlh.pencatatankeuangan.ui.formatRupiah
+import com.bpdlh.pencatatankeuangan.ui.formatNumber
 import com.bpdlh.pencatatankeuangan.ui.parsePrice
 import com.bpdlh.pencatatankeuangan.ui.priceDigits
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-
-enum class LocationState { Idle, Requesting, Filled, Unavailable, Denied, Disabled }
-
-data class EditorState(
-    val isLoading: Boolean = true,
-    val existing: Boolean = false,
-    val name: String = "",
-    val priceDigits: String = "",
-    val photoPath: String? = null,
-    val place: PlaceSnapshot = PlaceSnapshot(null, null, null),
-    val locationState: LocationState = LocationState.Idle,
-    val isSaving: Boolean = false,
-    val nameError: String? = null,
-    val priceError: String? = null,
-    val saved: Boolean = false,
-)
-
-sealed interface EditorAction {
-    data class OnNameChange(val value: String) : EditorAction
-    data class OnPriceChange(val value: String) : EditorAction
-    data class OnPhotoPicked(val uri: Uri) : EditorAction
-    data object OnRemovePhoto : EditorAction
-    data object OnRequestLocation : EditorAction
-    data object OnLocationDenied : EditorAction
-    data object OnSaveClick : EditorAction
-}
-
-class EditorViewModel(
-    private val container: AppContainer,
-    private val recordId: String?,
-    private val savedStateHandle: SavedStateHandle,
-) : ViewModel() {
-    private val _state = MutableStateFlow(EditorState())
-    val state: StateFlow<EditorState> = _state.asStateFlow()
-
-    init {
-        _state.update {
-            it.copy(
-                name = savedStateHandle[KEY_NAME] ?: "",
-                priceDigits = savedStateHandle[KEY_PRICE] ?: "",
-            )
-        }
-        viewModelScope.launch {
-            val existing = recordId?.let { container.records.find(it) }
-            if (existing == null) {
-                _state.update { it.copy(isLoading = false, existing = false) }
-                when {
-                    !container.prefs.saveLocationEnabled ->
-                        _state.update { it.copy(locationState = LocationState.Disabled) }
-                    container.location.hasPermission() -> onAction(EditorAction.OnRequestLocation)
-                }
-            } else {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        existing = true,
-                        name = existing.name,
-                        priceDigits = existing.price.toString(),
-                        photoPath = existing.photoPath,
-                        place = PlaceSnapshot(existing.latitude, existing.longitude, existing.accuracyM),
-                        locationState = if (existing.latitude != null) LocationState.Filled else LocationState.Unavailable,
-                    )
-                }
-            }
-        }
-    }
-
-    fun onAction(action: EditorAction) {
-        when (action) {
-            is EditorAction.OnNameChange -> {
-                val value = action.value.take(200)
-                savedStateHandle[KEY_NAME] = value
-                _state.update { it.copy(name = value, nameError = null) }
-            }
-            is EditorAction.OnPriceChange -> {
-                val value = priceDigits(action.value)
-                savedStateHandle[KEY_PRICE] = value
-                _state.update { it.copy(priceDigits = value, priceError = null) }
-            }
-            is EditorAction.OnPhotoPicked -> importPhoto(action.uri)
-            EditorAction.OnRemovePhoto -> {
-                container.photos.delete(_state.value.photoPath)
-                _state.update { it.copy(photoPath = null) }
-            }
-            EditorAction.OnRequestLocation -> requestLocation()
-            EditorAction.OnLocationDenied ->
-                _state.update { it.copy(locationState = LocationState.Denied) }
-            EditorAction.OnSaveClick -> save()
-        }
-    }
-
-    private fun importPhoto(uri: Uri) {
-        viewModelScope.launch {
-            runCatching { container.photos.import(uri) }.onSuccess { path ->
-                val old = _state.value.photoPath
-                if (old != null && old != path) container.photos.delete(old)
-                _state.update { it.copy(photoPath = path) }
-            }
-        }
-    }
-
-    private fun requestLocation() {
-        val current = _state.value
-        if (current.existing || current.locationState == LocationState.Requesting) return
-        _state.update { it.copy(locationState = LocationState.Requesting) }
-        viewModelScope.launch {
-            val place = container.location.requestOnce()
-            _state.update {
-                if (place.latitude != null) {
-                    it.copy(place = place, locationState = LocationState.Filled)
-                } else {
-                    it.copy(place = PlaceSnapshot(null, null, null), locationState = LocationState.Unavailable)
-                }
-            }
-        }
-    }
-
-    private fun save() {
-        val current = _state.value
-        if (current.isSaving) return
-        val name = current.name.trim()
-        val price = parsePrice(current.priceDigits)
-        val nameError = if (name.isEmpty()) "Nama belum diisi." else null
-        val priceError = if (price == null) "Harga belum diisi." else null
-        if (nameError != null || priceError != null) {
-            _state.update { it.copy(nameError = nameError, priceError = priceError) }
-            return
-        }
-
-        _state.update { it.copy(isSaving = true) }
-        viewModelScope.launch {
-            container.records.save(
-                existingId = recordId,
-                name = name,
-                price = price ?: 0,
-                photoPath = current.photoPath,
-                place = current.place,
-            )
-            _state.update { it.copy(isSaving = false, saved = true) }
-        }
-    }
-
-    private companion object {
-        const val KEY_NAME = "name"
-        const val KEY_PRICE = "price"
-    }
-}
 
 @Composable
 fun EditorRoot(
@@ -223,7 +70,14 @@ fun EditorRoot(
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
     viewModel: EditorViewModel = viewModel(key = recordId ?: "new") {
-        EditorViewModel(container, recordId, createSavedStateHandle())
+        EditorViewModel(
+            records = container.records,
+            photos = container.photos,
+            location = container.location,
+            prefs = container.prefs,
+            recordId = recordId,
+            savedStateHandle = createSavedStateHandle(),
+        )
     },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -276,19 +130,19 @@ fun EditorScreen(
             IconButton(onClick = onBackClick, modifier = Modifier.size(48.dp)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Kembali",
+                    contentDescription = stringResource(R.string.cd_back),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
-                text = if (state.existing) "Ubah catatan" else "Catat baru",
+                text = stringResource(if (state.existing) R.string.editor_title_edit else R.string.editor_title_new),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
             )
         }
 
         if (state.isLoading) {
-            LoadingBlock("Membuka catatan")
+            LoadingBlock(stringResource(R.string.editor_loading))
             return@Column
         }
 
@@ -302,40 +156,42 @@ fun EditorScreen(
             OutlinedTextField(
                 value = state.name,
                 onValueChange = { onAction(EditorAction.OnNameChange(it)) },
-                label = { Text("Nama") },
-                placeholder = { Text("Kopi susu") },
+                label = { Text(stringResource(R.string.editor_name_label)) },
+                placeholder = { Text(stringResource(R.string.editor_name_placeholder)) },
                 singleLine = true,
                 isError = state.nameError != null,
-                supportingText = { state.nameError?.let { Text(it) } },
+                supportingText = { state.nameError?.let { Text(it.asString()) } },
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
                 value = state.priceDigits,
                 onValueChange = { onAction(EditorAction.OnPriceChange(it)) },
-                label = { Text("Harga (Rp)") },
+                label = { Text(stringResource(R.string.editor_price_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = state.priceError != null,
                 supportingText = {
                     Text(
-                        text = state.priceError
-                            ?: state.priceDigits.takeIf { it.isNotEmpty() }?.let { formatRupiah(parsePrice(it) ?: 0) }
-                            ?: "Tanpa titik atau koma.",
+                        text = state.priceError?.asString()
+                            ?: state.priceDigits.takeIf { it.isNotEmpty() }?.let {
+                                stringResource(R.string.currency_amount, formatNumber(parsePrice(it) ?: 0))
+                            }
+                            ?: stringResource(R.string.editor_price_hint),
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(20.dp))
-            SectionLabel("Foto")
+            SectionLabel(stringResource(R.string.editor_section_photo))
             Spacer(Modifier.height(4.dp))
             val photoPath = state.photoPath
             if (photoPath != null) {
                 Spacer(Modifier.height(8.dp))
                 AsyncImage(
                     model = File(photoPath),
-                    contentDescription = "Foto catatan",
+                    contentDescription = stringResource(R.string.editor_cd_photo),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -347,8 +203,10 @@ fun EditorScreen(
                         val uri = newCameraUri(context)
                         cameraUri = uri
                         camera.launch(uri)
-                    }) { Text("Ganti foto") }
-                    TextButton(onClick = { onAction(EditorAction.OnRemovePhoto) }) { Text("Hapus foto") }
+                    }) { Text(stringResource(R.string.editor_photo_change)) }
+                    TextButton(onClick = { onAction(EditorAction.OnRemovePhoto) }) {
+                        Text(stringResource(R.string.editor_photo_remove))
+                    }
                 }
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -356,15 +214,15 @@ fun EditorScreen(
                         val uri = newCameraUri(context)
                         cameraUri = uri
                         camera.launch(uri)
-                    }) { Text("Ambil foto") }
+                    }) { Text(stringResource(R.string.editor_photo_take)) }
                     TextButton(onClick = {
                         photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }) { Text("Pilih dari galeri") }
+                    }) { Text(stringResource(R.string.editor_photo_pick)) }
                 }
             }
 
             Spacer(Modifier.height(16.dp))
-            SectionLabel("Lokasi")
+            SectionLabel(stringResource(R.string.editor_section_location))
             Spacer(Modifier.height(4.dp))
             LocationBlock(
                 state = state,
@@ -374,14 +232,14 @@ fun EditorScreen(
 
             Spacer(Modifier.height(16.dp))
             if (state.existing) {
-                FieldHint("Lokasi dan info perangkat tidak berubah saat catatan diubah.")
+                FieldHint(stringResource(R.string.editor_hint_existing))
             }
             Spacer(Modifier.height(16.dp))
         }
 
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             PrimaryAction(
-                text = "Simpan",
+                text = stringResource(R.string.action_save),
                 onClick = { onAction(EditorAction.OnSaveClick) },
                 loading = state.isSaving,
                 enabled = !state.isSaving,
@@ -393,12 +251,9 @@ fun EditorScreen(
     if (showLocationRationale) {
         AlertDialog(
             onDismissRequest = { showLocationRationale = false },
-            title = { Text("Izin lokasi") },
+            title = { Text(stringResource(R.string.editor_location_rationale_title)) },
             text = {
-                Text(
-                    "Lokasi presisi diambil sekali saat catatan disimpan, supaya catatan tahu di mana ia dibuat. " +
-                        "Tanpa izin, catatan tetap tersimpan tanpa lokasi.",
-                )
+                Text(stringResource(R.string.editor_location_rationale_body))
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -409,10 +264,10 @@ fun EditorScreen(
                             android.Manifest.permission.ACCESS_COARSE_LOCATION,
                         ),
                     )
-                }) { Text("Lanjutkan") }
+                }) { Text(stringResource(R.string.action_continue)) }
             },
             dismissButton = {
-                TextButton(onClick = { showLocationRationale = false }) { Text("Nanti") }
+                TextButton(onClick = { showLocationRationale = false }) { Text(stringResource(R.string.action_later)) }
             },
         )
     }
@@ -428,26 +283,31 @@ private fun LocationBlock(
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     when (state.locationState) {
         LocationState.Filled -> Text(
-            text = formatCoordinate(place.latitude ?: 0.0, place.longitude ?: 0.0) +
-                (place.accuracyM?.let { " ±${formatAccuracy(it)}" } ?: ""),
+            text = place.accuracyM?.let { accuracy ->
+                stringResource(
+                    R.string.editor_location_coordinate,
+                    formatCoordinate(place.latitude ?: 0.0, place.longitude ?: 0.0),
+                    stringResource(R.string.accuracy_meters, Math.round(accuracy).toInt()),
+                )
+            } ?: formatCoordinate(place.latitude ?: 0.0, place.longitude ?: 0.0),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        LocationState.Requesting -> StatusText("Mengambil lokasi…", muted)
+        LocationState.Requesting -> StatusText(stringResource(R.string.editor_location_requesting), muted)
         LocationState.Denied -> LocationLine(
-            text = "Izin ditolak. Catatan tersimpan tanpa lokasi.",
-            actionLabel = "Coba lagi",
+            text = stringResource(R.string.editor_location_denied),
+            actionLabel = stringResource(R.string.action_retry),
             onAction = onRequestPermission,
         )
-        LocationState.Unavailable -> StatusText("Lokasi tidak tersedia. Catatan tetap tersimpan.", muted)
+        LocationState.Unavailable -> StatusText(stringResource(R.string.editor_location_unavailable), muted)
         LocationState.Disabled -> LocationLine(
-            text = "Lokasi otomatis dimatikan.",
-            actionLabel = "Pengaturan",
+            text = stringResource(R.string.editor_location_disabled),
+            actionLabel = stringResource(R.string.action_settings),
             onAction = onOpenSettings,
         )
         LocationState.Idle -> LocationLine(
-            text = "Belum diambil.",
-            actionLabel = "Izinkan",
+            text = stringResource(R.string.editor_location_idle),
+            actionLabel = stringResource(R.string.action_allow),
             onAction = onRequestPermission,
         )
     }

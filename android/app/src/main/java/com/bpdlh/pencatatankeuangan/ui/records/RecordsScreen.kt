@@ -27,115 +27,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bpdlh.pencatatankeuangan.AppContainer
-import com.bpdlh.pencatatankeuangan.data.Record
-import com.bpdlh.pencatatankeuangan.data.SYNC_FAILED
-import com.bpdlh.pencatatankeuangan.data.SYNC_PENDING
-import com.bpdlh.pencatatankeuangan.data.SyncStatus
+import com.bpdlh.pencatatankeuangan.R
+import com.bpdlh.pencatatankeuangan.ui.asString
 import com.bpdlh.pencatatankeuangan.ui.components.Hairline
 import com.bpdlh.pencatatankeuangan.ui.components.LedgerRow
 import com.bpdlh.pencatatankeuangan.ui.components.LoadingBlock
 import com.bpdlh.pencatatankeuangan.ui.components.MessageBlock
 import com.bpdlh.pencatatankeuangan.ui.formatClock
 import com.bpdlh.pencatatankeuangan.ui.formatDate
-import com.bpdlh.pencatatankeuangan.ui.formatRupiah
-import com.bpdlh.pencatatankeuangan.ui.pendingStaleWarning
-import com.bpdlh.pencatatankeuangan.ui.summaryLine
+import com.bpdlh.pencatatankeuangan.ui.formatNumber
 import com.bpdlh.pencatatankeuangan.ui.theme.LocalStatusColors
 import com.bpdlh.pencatatankeuangan.ui.theme.PencatatanTheme
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-
-data class RecordUi(
-    val id: String,
-    val name: String,
-    val dateLabel: String,
-    val amountLabel: String,
-    val statusLabel: String?,
-    val failed: Boolean,
-)
-
-fun Record.toRecordUi(): RecordUi = RecordUi(
-    id = id,
-    name = name,
-    dateLabel = formatDate(createdAt),
-    amountLabel = formatRupiah(price),
-    statusLabel = when (syncStatus) {
-        SYNC_PENDING -> "menunggu dikirim"
-        SYNC_FAILED -> "ditolak server"
-        else -> null
-    },
-    failed = syncStatus == SYNC_FAILED,
-)
-
-data class RecordsState(
-    val isLoading: Boolean = true,
-    val error: String? = null,
-    val records: List<RecordUi> = emptyList(),
-    val summary: String? = null,
-    val pendingCount: Int = 0,
-    val sync: SyncStatus = SyncStatus(),
-    val online: Boolean = true,
-    val pendingWarning: String? = null,
-)
-
-sealed interface RecordsAction {
-    data object OnRetryClick : RecordsAction
-}
-
-class RecordsViewModel(container: AppContainer) : ViewModel() {
-    private val retry = MutableStateFlow(0)
-
-    private val records: Flow<Result<List<Record>>> = retry.flatMapLatest {
-        container.records.observeActive()
-            .map<List<Record>, Result<List<Record>>> { Result.success(it) }
-            .catch { error -> emit(Result.failure(error)) }
-    }
-
-    private val _state: StateFlow<RecordsState> = combine(
-        records,
-        container.records.observePendingCount(),
-        container.records.syncStatus,
-        container.connectivity.online,
-    ) { loaded, pending, sync, online ->
-        val rows = loaded.getOrDefault(emptyList())
-        RecordsState(
-            isLoading = false,
-            error = loaded.exceptionOrNull()?.let { "Catatan tidak bisa dibaca. ${it.message.orEmpty()}" },
-            records = rows.map { it.toRecordUi() },
-            summary = rows.takeIf { it.isNotEmpty() }?.let { summaryLine(it.size, it.sumOf { row -> row.price }) },
-            pendingCount = pending,
-            sync = sync,
-            online = online,
-            pendingWarning = pendingStaleWarning(
-                rows.filter { it.syncStatus == SYNC_PENDING }.minOfOrNull { it.updatedAt },
-                System.currentTimeMillis(),
-            ),
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RecordsState())
-
-    val state: StateFlow<RecordsState> = _state
-
-    fun onAction(action: RecordsAction) {
-        when (action) {
-            RecordsAction.OnRetryClick -> retry.value += 1
-        }
-    }
-}
 
 @Composable
 fun RecordsRoot(
@@ -143,7 +52,7 @@ fun RecordsRoot(
     onOpenRecord: (String) -> Unit,
     onAddRecord: () -> Unit,
     onOpenSettings: () -> Unit,
-    viewModel: RecordsViewModel = viewModel { RecordsViewModel(container) },
+    viewModel: RecordsViewModel = viewModel { RecordsViewModel(container.records, container.connectivity) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     RecordsScreen(
@@ -174,7 +83,7 @@ fun RecordsScreen(
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Catatan",
+                text = stringResource(R.string.records_title),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -183,14 +92,14 @@ fun RecordsScreen(
             IconButton(onClick = onAddClick, modifier = Modifier.size(48.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.Add,
-                    contentDescription = "Catat pengeluaran",
+                    contentDescription = stringResource(R.string.records_cd_add),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
             IconButton(onClick = onSettingsClick, modifier = Modifier.size(48.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.Settings,
-                    contentDescription = "Pengaturan",
+                    contentDescription = stringResource(R.string.records_cd_settings),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -202,17 +111,25 @@ fun RecordsScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = state.summary.orEmpty(),
+                text = if (state.records.isEmpty()) {
+                    ""
+                } else {
+                    stringResource(
+                        R.string.records_summary,
+                        state.records.size,
+                        stringResource(R.string.currency_amount, formatNumber(state.total)),
+                    )
+                },
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             SyncLine(state, Modifier.weight(1f))
         }
-        state.pendingWarning?.let { warning ->
+        if (state.showStaleWarning) {
             Spacer(Modifier.height(4.dp))
             Text(
-                text = warning,
+                text = stringResource(R.string.records_stale_warning),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.error,
             )
@@ -221,18 +138,18 @@ fun RecordsScreen(
         Hairline()
 
         when {
-            state.isLoading -> LoadingBlock("Memuat catatan", Modifier.weight(1f))
+            state.isLoading -> LoadingBlock(stringResource(R.string.records_loading), Modifier.weight(1f))
             state.error != null -> MessageBlock(
-                title = "Catatan tidak bisa dibuka",
-                body = state.error,
-                actionLabel = "Coba lagi",
+                title = stringResource(R.string.records_error_title),
+                body = state.error.asString(),
+                actionLabel = stringResource(R.string.action_retry),
                 onAction = { onAction(RecordsAction.OnRetryClick) },
                 modifier = Modifier.weight(1f),
             )
             state.records.isEmpty() -> MessageBlock(
-                title = "Belum ada catatan",
-                body = "Catat pengeluaran pertama. Foto, lokasi, dan info perangkat ikut tersimpan kalau tersedia.",
-                actionLabel = "Catat pengeluaran",
+                title = stringResource(R.string.records_empty_title),
+                body = stringResource(R.string.records_empty_body),
+                actionLabel = stringResource(R.string.records_empty_action),
                 onAction = onAddClick,
                 modifier = Modifier.weight(1f),
             )
@@ -240,9 +157,9 @@ fun RecordsScreen(
                 items(state.records, key = { it.id }) { row ->
                     LedgerRow(
                         title = row.name,
-                        meta = row.dateLabel,
-                        amount = row.amountLabel,
-                        status = row.statusLabel,
+                        meta = formatDate(row.createdAt),
+                        amount = stringResource(R.string.currency_amount, formatNumber(row.price)),
+                        status = row.statusRes?.let { stringResource(it) },
                         statusColor = if (row.failed) MaterialTheme.colorScheme.error else status.pending,
                         onClick = { onRecordClick(row.id) },
                     )
@@ -261,23 +178,23 @@ private fun SyncLine(state: RecordsState, modifier: Modifier = Modifier) {
     val color: Color
     when {
         state.sync.running -> {
-            text = "Menyinkronkan"
+            text = stringResource(R.string.records_syncing)
             color = status.muted
         }
         state.sync.lastError != null -> {
-            text = "Sinkronisasi gagal: ${state.sync.lastError}"
+            text = stringResource(R.string.records_sync_failed, state.sync.lastError.uiText.asString())
             color = MaterialTheme.colorScheme.error
         }
         state.pendingCount > 0 -> {
-            text = "${state.pendingCount} catatan menunggu dikirim"
+            text = stringResource(R.string.records_pending_count, state.pendingCount)
             color = status.pending
         }
         state.sync.lastSyncAt != null -> {
-            text = "Tersinkron pukul ${formatClock(state.sync.lastSyncAt)}"
+            text = stringResource(R.string.records_synced_at, formatClock(state.sync.lastSyncAt))
             color = status.muted
         }
         else -> {
-            text = "Belum pernah tersinkron"
+            text = stringResource(R.string.records_never_synced)
             color = status.muted
         }
     }
@@ -305,7 +222,7 @@ private fun ConnectionLabel(online: Boolean, modifier: Modifier = Modifier) {
                 .background(if (online) status.synced else status.muted, CircleShape),
         )
         Text(
-            text = if (online) "Online" else "Offline",
+            text = stringResource(if (online) R.string.records_online else R.string.records_offline),
             style = MaterialTheme.typography.labelSmall,
             color = status.muted,
         )
@@ -320,10 +237,10 @@ private fun RecordsScreenPreview() {
             state = RecordsState(
                 isLoading = false,
                 records = listOf(
-                    RecordUi("1", "Kopi susu", "17 Nov 2026", "Rp 18.000", "menunggu dikirim", false),
-                    RecordUi("2", "Bensin motor", "17 Nov 2026", "Rp 45.000", null, false),
+                    RecordUi("1", "Kopi susu", 18_000, 1_794_800_000_000, R.string.status_pending_short, false),
+                    RecordUi("2", "Bensin motor", 45_000, 1_794_800_000_000, null, false),
                 ),
-                summary = "2 catatan · Rp 63.000",
+                total = 63_000,
                 pendingCount = 1,
             ),
             onAction = {},

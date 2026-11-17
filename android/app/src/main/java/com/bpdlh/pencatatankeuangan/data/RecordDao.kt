@@ -16,7 +16,11 @@ interface RecordDao {
     fun observePendingCount(): Flow<Int>
 
     @Query("SELECT * FROM records WHERE id = :id")
+    fun observeById(id: String): Flow<Record?>
+
+    @Query("SELECT * FROM records WHERE id = :id")
     suspend fun findById(id: String): Record?
+
     @Query("SELECT COUNT(*) FROM records WHERE syncStatus = 'pending'")
     suspend fun countPending(): Int
     @Query("SELECT * FROM records WHERE syncStatus = 'pending' ORDER BY updatedAt ASC LIMIT :limit")

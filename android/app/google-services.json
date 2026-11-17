@@ -14,19 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "315183333969-072vl33dr0bppas1g6ujn7ngv0ejln5l.apps.googleusercontent.com",
+          "client_id": "315183333969-npd4n66cj57sfergoor7gvb57fffljnj.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.bpdlh.pencatatankeuangan",
-            "certificate_hash": "df0ffaba88a542ccc1f9da5a16c1238db950ccad"
-          }
-        },
-        {
-          "client_id": "315183333969-626vlapgpi89n9vj1skmphi3pf71mh4u.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.bpdlh.pencatatankeuangan",
-            "certificate_hash": "a3b7d0ae03d81cce0d693f07090eeafd395650c9"
+            "certificate_hash": "55d11cfa84cb56b465f350a36f8e6f345f87f0fb"
           }
         },
         {

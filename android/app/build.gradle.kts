@@ -11,7 +11,18 @@ plugins {
 val localProperties = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
+
+// urutan: local.properties -> gradle property (-Pkey=value) -> environment variable -> default
+// nilai kosong dianggap tidak diisi, supaya kunci `key=` di local.properties tidak menimpa default
+fun config(key: String, env: String, fallback: String = ""): String =
+    localProperties.getProperty(key)?.takeIf { it.isNotBlank() }
+        ?: providers.gradleProperty(key).orNull?.takeIf { it.isNotBlank() }
+        ?: System.getenv(env)?.takeIf { it.isNotBlank() }
+        ?: fallback
+
 val prodApiBaseUrl = "https://pencatatan-keuangan.adityabudiutomo24.workers.dev"
+val releaseStoreFile = config("signing.storeFile", "SIGNING_STORE_FILE")
+val releaseSigningReady = releaseStoreFile.isNotBlank() && rootProject.file(releaseStoreFile).exists()
 
 android {
     namespace = "com.bpdlh.pencatatankeuangan"
@@ -35,20 +46,31 @@ android {
         )
     }
 
+    signingConfigs {
+        if (releaseSigningReady) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile)
+                storePassword = config("signing.storePassword", "SIGNING_STORE_PASSWORD")
+                keyAlias = config("signing.keyAlias", "SIGNING_KEY_ALIAS")
+                keyPassword = config("signing.keyPassword", "SIGNING_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
-            versionNameSuffix = "-debug"
-            resValue("string", "app_name", "Pencatatan Debug")
+            resValue("string", "app_name", "Pencatatan")
             buildConfigField(
                 "String",
                 "API_BASE_URL",
-                "\"${localProperties.getProperty("api.baseUrl.debug", prodApiBaseUrl)}\"",
+                "\"${config("api.baseUrl.debug", "API_BASE_URL_DEBUG", prodApiBaseUrl)}\"",
             )
-            buildConfigField("String", "SENTRY_DSN", "\"${localProperties.getProperty("sentry.dsn.debug", "")}\"")
+            buildConfigField("String", "SENTRY_DSN", "\"${config("sentry.dsn.debug", "SENTRY_DSN_DEBUG")}\"")
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"$prodApiBaseUrl\"")
-            buildConfigField("String", "SENTRY_DSN", "\"${localProperties.getProperty("sentry.dsn", "")}\"")
+            if (releaseSigningReady) signingConfig = signingConfigs.getByName("release")
+            buildConfigField("String", "API_BASE_URL", "\"${config("api.baseUrl", "API_BASE_URL", prodApiBaseUrl)}\"")
+            buildConfigField("String", "SENTRY_DSN", "\"${config("sentry.dsn", "SENTRY_DSN")}\"")
             optimization {
                 enable = false
             }
@@ -100,6 +122,7 @@ dependencies {
     implementation(libs.exifinterface)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -2,6 +2,7 @@ package com.bpdlh.pencatatankeuangan
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import com.bpdlh.pencatatankeuangan.auth.AuthRepository
 import com.bpdlh.pencatatankeuangan.data.AccountManager
 import com.bpdlh.pencatatankeuangan.data.AppDatabase
@@ -22,6 +23,7 @@ import io.sentry.SentryLevel
 import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.tasks.await
 
+@Suppress("DEPRECATION")
 class AppContainer(private val context: Context) {
     val prefs = Prefs(context)
     val photos = PhotoStore(context)
@@ -57,7 +59,12 @@ class AppContainer(private val context: Context) {
     fun setCrashReporting(enabled: Boolean) {
         prefs.crashReportsEnabled = enabled
         val dsn = BuildConfig.SENTRY_DSN
-        if (!enabled || dsn.isBlank()) {
+        if (!enabled) {
+            if (Sentry.isEnabled()) Sentry.close()
+            return
+        }
+        if (dsn.isBlank()) {
+            if (BuildConfig.DEBUG) Log.w("Sentry", "SENTRY_DSN kosong; laporan crash tidak dikirim.")
             if (Sentry.isEnabled()) Sentry.close()
             return
         }

@@ -3,7 +3,6 @@ package com.bpdlh.pencatatankeuangan.data
 import com.bpdlh.pencatatankeuangan.data.remote.SyncApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import java.util.UUID
 
 data class PlaceSnapshot(val latitude: Double?, val longitude: Double?, val accuracyM: Double?)
@@ -16,27 +15,20 @@ class RecordsRepository(
     private val api: SyncApi,
     private val scheduleSync: () -> Unit,
     syncCoordinator: SyncCoordinator,
-) {
-    val syncStatus: StateFlow<SyncStatus> = syncCoordinator.status
+) : RecordFeed, RecordEditor {
+    override val syncStatus: StateFlow<SyncStatus> = syncCoordinator.status
 
-    fun observeActive(): Flow<List<Record>> = dao.observeActive()
+    override fun observeActive(): Flow<List<Record>> = dao.observeActive()
 
-    fun observePendingCount(): Flow<Int> = dao.observePendingCount()
+    override fun observePendingCount(): Flow<Int> = dao.observePendingCount()
 
     suspend fun pendingCount(): Int = dao.countPending()
 
-    fun observeSyncState(): Flow<SyncState?> = syncStateDao.observe()
+    override fun observeRecord(id: String): Flow<Record?> = dao.observeById(id)
 
-    suspend fun find(id: String): Record? = dao.findById(id)
+    override suspend fun find(id: String): Record? = dao.findById(id)
 
-    suspend fun syncState(): SyncState {
-        syncStateDao.get()?.let { return it }
-        val fresh = SyncState(lastPullSeq = 0, deviceId = prefs.deviceId)
-        syncStateDao.save(fresh)
-        return fresh
-    }
-
-    suspend fun save(
+    override suspend fun save(
         existingId: String?,
         name: String,
         price: Long,
@@ -89,7 +81,7 @@ class RecordsRepository(
         return record.id
     }
 
-    suspend fun delete(id: String) {
+    override suspend fun delete(id: String) {
         val existing = dao.findById(id) ?: return
         photos.delete(existing.photoPath)
         val now = System.currentTimeMillis()
@@ -112,7 +104,7 @@ class RecordsRepository(
         prefs.clearSession()
     }
 
-    suspend fun ensurePhoto(record: Record): String? {
+    override suspend fun ensurePhoto(record: Record): String? {
         record.photoPath?.let { if (java.io.File(it).exists()) return it }
         val photoId = record.photoId ?: return null
         val bytes = api.getPhoto(photoId)

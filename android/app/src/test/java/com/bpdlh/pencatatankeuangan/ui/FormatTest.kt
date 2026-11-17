@@ -1,15 +1,17 @@
 package com.bpdlh.pencatatankeuangan.ui
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FormatTest {
     @Test
-    fun rupiahUsesIndonesianGrouping() {
-        assertEquals("Rp 0", formatRupiah(0))
-        assertEquals("Rp 18.000", formatRupiah(18_000))
-        assertEquals("Rp 1.250.000", formatRupiah(1_250_000))
+    fun numberUsesIndonesianGrouping() {
+        assertEquals("0", formatNumber(0))
+        assertEquals("18.000", formatNumber(18_000))
+        assertEquals("1.250.000", formatNumber(1_250_000))
     }
 
     @Test
@@ -32,24 +34,10 @@ class FormatTest {
     }
 
     @Test
-    fun accuracyIsRoundedMeters() {
-        assertEquals("13 m", formatAccuracy(12.5))
-        assertEquals("13 m", formatAccuracy(12.6))
-    }
-
-    @Test
     fun staleWarningOnlyAfterADay() {
         val now = 10_000_000_000L
-        assertNull(pendingStaleWarning(null, now))
-        assertNull(pendingStaleWarning(now - 60_000, now))
-        assertEquals(
-            "Catatan ini belum terkirim lebih dari sehari. Selama belum tersinkron, datanya hanya ada di perangkat ini.",
-            pendingStaleWarning(now - 25 * 60 * 60 * 1000, now),
-        )
-    }
-
-    @Test
-    fun summaryShowsCountAndTotal() {
-        assertEquals("2 catatan · Rp 21.000", summaryLine(2, 21_000))
+        assertFalse(isStalePending(null, now))
+        assertFalse(isStalePending(now - 60_000, now))
+        assertTrue(isStalePending(now - 25 * 60 * 60 * 1000, now))
     }
 }

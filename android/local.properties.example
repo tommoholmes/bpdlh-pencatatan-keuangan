@@ -1,0 +1,31 @@
+# Template konfigurasi lokal. Salin ke `local.properties` (berkas itu tidak masuk repo).
+#
+# Nilai boleh juga datang dari environment variable atau gradle property:
+#   SENTRY_DSN=... ./gradlew :app:assembleRelease
+#   ./gradlew :app:assembleRelease -Psentry.dsn=...
+#
+# Urutan pembacaan: local.properties -> -P<key>=<value> -> environment variable -> default.
+# Nilai kosong dianggap tidak diisi.
+
+# Wajib, dibuat otomatis oleh Android Studio.
+sdk.dir=/path/ke/Android/sdk
+
+# Base URL Worker. Kosong = URL produksi (lihat `prodApiBaseUrl` di build.gradle.kts).
+api.baseUrl=
+api.baseUrl.debug=
+
+# DSN Sentry. Kosong = SDK tidak dinyalakan dan tidak ada laporan crash.
+# Format: https://<key>@o<org>.ingest.sentry.io/<project>
+sentry.dsn=
+sentry.dsn.debug=
+
+# Signing rilis. TIDAK PERLU bila APK rilis ditandatangani lewat Android Studio
+# (Build > Generate Signed App Bundle / APK).
+#
+# Isi keempat kunci ini hanya bila ingin `./gradlew :app:assembleRelease`
+# langsung menghasilkan APK bertanda tangan. Tanpa itu, keluarannya
+# `app-release-unsigned.apk`.
+# signing.storeFile=bpdlh.jks
+# signing.storePassword=
+# signing.keyAlias=
+# signing.keyPassword=

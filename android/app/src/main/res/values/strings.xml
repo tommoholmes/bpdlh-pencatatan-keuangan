@@ -1,4 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pencatatan</string>
+
+    <string name="cd_back">Kembali</string>
+    <string name="action_retry">Coba lagi</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_edit">Ubah</string>
+    <string name="action_delete">Hapus</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_continue">Lanjutkan</string>
+    <string name="action_later">Nanti</string>
+    <string name="action_settings">Pengaturan</string>
+    <string name="action_allow">Izinkan</string>
+
+    <string name="currency_amount">Rp %1$s</string>
+    <string name="accuracy_meters">%1$d m</string>
+
+    <string name="login_title"> Aplikasi pencatatan test mobile apps BPDLH</string>
+    <string name="login_body">Catat pengeluaran harian: nama, harga, foto. Tersimpan di perangkat lebih dulu, terkirim saat ada internet.</string>
+    <string name="login_cta">Masuk dengan Google</string>
+    <string name="login_failed">Login gagal.</string>
+    <string name="login_cancelled">Login dibatalkan.</string>
+    <string name="login_no_account">Tidak ada akun Google di perangkat ini. Tambahkan akun lewat Pengaturan Android, lalu coba lagi.</string>
+    <string name="login_google_failed">Login Google gagal. Periksa koneksi lalu coba lagi.</string>
+    <string name="login_google_failed_detail">Login Google gagal: %1$s</string>
+    <string name="account_recent_login_required">Sesi sudah habis masuk ulang.</string>
+
+    <string name="records_title">Catatan</string>
+    <string name="records_cd_add">Catat pengeluaran</string>
+    <string name="records_cd_settings">Pengaturan</string>
+    <string name="records_loading">Loading</string>
+    <string name="records_error_title">Catatan tidak bisa dibuka</string>
+    <string name="records_empty_title">Belum ada catatan</string>
+    <string name="records_empty_body">Catat pengeluaran pertama. Foto, lokasi, dan info perangkat ikut tersimpan kalau tersedia.</string>
+    <string name="records_empty_action">Catat pengeluaran</string>
+    <string name="records_summary">%1$d catatan · %2$s</string>
+    <string name="records_syncing">Menyinkronkan</string>
+    <string name="records_sync_failed">Sinkronisasi gagal: %1$s</string>
+    <string name="records_pending_count">%1$d catatan menunggu dikirim</string>
+    <string name="records_synced_at">Tersinkron pukul %1$s</string>
+    <string name="records_never_synced">Belum pernah tersinkron</string>
+    <string name="records_online">Online</string>
+    <string name="records_offline">Offline</string>
+    <string name="records_stale_warning">Catatan ini belum terkirim lebih dari sehari. Selama belum tersinkron, datanya hanya ada di perangkat ini.</string>
+    <string name="records_read_error">Catatan tidak bisa dibaca. %1$s</string>
+    <string name="records_cd_open">Buka catatan %1$s</string>
+
+    <string name="status_pending_short">menunggu dikirim</string>
+    <string name="status_failed_short">ditolak server</string>
+    <string name="status_pending">Menunggu dikirim</string>
+    <string name="status_failed">Ditolak server</string>
+    <string name="status_synced">Tersinkron</string>
+
+    <string name="editor_title_new">Catat baru</string>
+    <string name="editor_title_edit">Ubah catatan</string>
+    <string name="editor_loading">Loading</string>
+    <string name="editor_name_label">Nama</string>
+    <string name="editor_name_placeholder">Kopi susu</string>
+    <string name="editor_price_label">Harga (Rp)</string>
+    <string name="editor_price_hint">Tanpa titik atau koma.</string>
+    <string name="editor_name_required">Nama belum diisi.</string>
+    <string name="editor_price_required">Harga belum diisi.</string>
+    <string name="editor_section_photo">Foto</string>
+    <string name="editor_photo_take">Ambil foto</string>
+    <string name="editor_photo_pick">Pilih dari galeri</string>
+    <string name="editor_photo_change">Ganti foto</string>
+    <string name="editor_photo_remove">Hapus foto</string>
+    <string name="editor_cd_photo">Foto catatan</string>
+    <string name="editor_section_location">Lokasi</string>
+    <string name="editor_location_coordinate">%1$s ±%2$s</string>
+    <string name="editor_location_requesting">Mengambil lokasi…</string>
+    <string name="editor_location_denied">Izin ditolak. Catatan tersimpan tanpa lokasi.</string>
+    <string name="editor_location_unavailable">Lokasi tidak tersedia. Catatan tetap tersimpan.</string>
+    <string name="editor_location_disabled">Lokasi otomatis dimatikan.</string>
+    <string name="editor_location_idle">Belum diambil.</string>
+    <string name="editor_hint_existing">Lokasi dan info perangkat tidak berubah saat catatan diubah.</string>
+    <string name="editor_location_rationale_title">Izin lokasi</string>
+    <string name="editor_location_rationale_body">Lokasi presisi diambil sekali saat catatan disimpan, supaya catatan tahu di mana ia dibuat. Tanpa izin, catatan tetap tersimpan tanpa lokasi.</string>
+
+    <string name="detail_loading">Membuka catatan</string>
+    <string name="detail_error_title">Catatan tidak bisa dibuka</string>
+    <string name="detail_not_found">Catatan tidak ditemukan. Mungkin sudah dihapus di perangkat lain.</string>
+    <string name="detail_cd_photo">Foto catatan %1$s</string>
+    <string name="detail_photo_failed">Foto belum bisa diunduh. Coba lagi saat ada internet.</string>
+    <string name="detail_photo_reload">Muat ulang foto</string>
+    <string name="detail_label_created">Dibuat</string>
+    <string name="detail_label_updated">Diubah</string>
+    <string name="detail_label_status">Status</string>
+    <string name="detail_label_location">Lokasi</string>
+    <string name="detail_label_accuracy">Akurasi</string>
+    <string name="detail_location_missing">Tidak dicatat</string>
+    <string name="detail_open_map">Buka di aplikasi peta</string>
+    <string name="detail_no_map_app">Tidak ada aplikasi peta di perangkat ini.</string>
+    <string name="detail_device_line">%1$s · %2$s · app %3$s</string>
+    <string name="detail_device_unknown">Tidak tercatat</string>
+    <string name="detail_delete_title">Hapus catatan?</string>
+    <string name="detail_delete_body">Catatan dihapus dari perangkat ini dan dari perangkat lain saat tersinkron.</string>
+
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_section_account">Akun</string>
+    <string name="settings_not_signed_in">Belum masuk</string>
+    <string name="settings_id_label">ID</string>
+    <string name="settings_log_id_missing">Belum dibuat. Terbentuk setelah sinkronisasi pertama.</string>
+    <string name="settings_section_sync">Sinkronisasi</string>
+    <string name="settings_sync_failed">Gagal: %1$s</string>
+    <string name="settings_last_sync">Terakhir %1$s</string>
+    <string name="settings_sign_out">Keluar</string>
+    <string name="settings_signout_dialog_title">Catatan belum terkirim</string>
+    <string name="settings_signout_dialog_body">Masih ada catatan yang gagal dikirim. Keluar sekarang akan menghapus catatan itu dari perangkat ini.</string>
+    <string name="settings_sign_out_discard">Keluar dan hapus</string>
+    <string name="settings_signout_failed">Sinkronisasi gagal: %1$s</string>
+    <string name="settings_delete_failed">Hapus akun gagal.</string>
+
+    <string name="sync_error_unauthorized">Sesi berakhir. Masuk ulang dengan Google.</string>
+    <string name="sync_error_photo_too_large">Foto lebih dari 5 MB. Ganti dengan foto yang lebih kecil.</string>
+    <string name="sync_error_client">Server menolak data (kode %1$d).</string>
+    <string name="sync_error_server">Server sedang bermasalah. Coba lagi nanti.</string>
+    <string name="sync_error_offline">Tidak ada koneksi internet.</string>
+    <string name="sync_error_disconnected">Koneksi terputus. Coba lagi nanti.</string>
+    <string name="sync_error_unknown">Sinkronisasi gagal.</string>
 </resources>

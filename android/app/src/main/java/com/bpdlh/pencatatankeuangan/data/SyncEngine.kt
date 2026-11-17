@@ -7,7 +7,7 @@ import kotlinx.coroutines.CancellationException
 sealed interface SyncOutcome {
     data object NotSignedIn : SyncOutcome
     data class Done(val pushed: Int, val pulled: Int) : SyncOutcome
-    data class Failed(val message: String) : SyncOutcome
+    data class Failed(val failure: SyncFailure) : SyncOutcome
 }
 
 class SyncEngine(
@@ -57,9 +57,9 @@ class SyncEngine(
         throw e
     } catch (e: Exception) {
         if (io.sentry.Sentry.isEnabled()) io.sentry.Sentry.captureException(e)
-        val message = syncErrorMessage(e)
-        prefs.lastSyncError = message
-        SyncOutcome.Failed(message)
+        val failure = syncFailure(e)
+        prefs.lastSyncError = failure
+        SyncOutcome.Failed(failure)
     }
 
     private suspend fun pullAll(state: SyncState, syncId: String): Int {

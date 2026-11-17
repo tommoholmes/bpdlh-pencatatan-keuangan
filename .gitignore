@@ -18,6 +18,14 @@ android/.idea/navEditor.xml
 android/.idea/assetWizardSettings.xml
 android/.idea/shelf/
 
+# Signing material dan hasil build rilis: jangan pernah masuk repo
+*.jks
+*.keystore
+android/bpdlh.jks
+android/app/release/
+android/app/*.apk
+android/app/*.aab
+
 # Backend
 backend/node_modules/
 backend/.wrangler/

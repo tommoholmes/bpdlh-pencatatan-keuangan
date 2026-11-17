@@ -3,22 +3,22 @@ package com.bpdlh.pencatatankeuangan.data
 import android.content.Context
 import java.util.UUID
 
-class Prefs(context: Context) {
+class Prefs(context: Context) : SettingsStore {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     val deviceId: String
         get() = prefs.getString(KEY_DEVICE_ID, null)
             ?: UUID.randomUUID().toString().also { prefs.edit().putString(KEY_DEVICE_ID, it).apply() }
 
-    var logId: String?
+    override var logId: String?
         get() = prefs.getString(KEY_LOG_ID, null)
         set(value) = prefs.edit().putString(KEY_LOG_ID, value).apply()
 
-    var crashReportsEnabled: Boolean
+    override var crashReportsEnabled: Boolean
         get() = prefs.getBoolean(KEY_CRASH, true)
         set(value) = prefs.edit().putBoolean(KEY_CRASH, value).apply()
 
-    var saveLocationEnabled: Boolean
+    override var saveLocationEnabled: Boolean
         get() = prefs.getBoolean(KEY_LOCATION, true)
         set(value) = prefs.edit().putBoolean(KEY_LOCATION, value).apply()
 
@@ -26,9 +26,9 @@ class Prefs(context: Context) {
         get() = prefs.getLong(KEY_LAST_SYNC, 0).takeIf { it > 0 }
         set(value) = prefs.edit().putLong(KEY_LAST_SYNC, value ?: 0).apply()
 
-    var lastSyncError: String?
-        get() = prefs.getString(KEY_LAST_ERROR, null)
-        set(value) = prefs.edit().putString(KEY_LAST_ERROR, value).apply()
+    var lastSyncError: SyncFailure?
+        get() = decodeSyncFailure(prefs.getString(KEY_LAST_ERROR, null))
+        set(value) = prefs.edit().putString(KEY_LAST_ERROR, value?.encode()).apply()
 
     fun clearSession() {
         prefs.edit().remove(KEY_LOG_ID).remove(KEY_LAST_SYNC).remove(KEY_LAST_ERROR).apply()

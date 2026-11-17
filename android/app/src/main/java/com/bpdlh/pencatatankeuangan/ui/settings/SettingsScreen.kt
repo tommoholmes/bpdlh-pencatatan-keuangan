@@ -1,6 +1,5 @@
 package com.bpdlh.pencatatankeuangan.ui.settings
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,138 +30,35 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bpdlh.pencatatankeuangan.AppContainer
-import com.bpdlh.pencatatankeuangan.data.SignOutResult
-import com.bpdlh.pencatatankeuangan.data.SyncStatus
+import com.bpdlh.pencatatankeuangan.R
+import com.bpdlh.pencatatankeuangan.ui.asString
 import com.bpdlh.pencatatankeuangan.ui.components.Hairline
 import com.bpdlh.pencatatankeuangan.ui.components.SectionLabel
 import com.bpdlh.pencatatankeuangan.ui.components.StatusText
 import com.bpdlh.pencatatankeuangan.ui.formatDateTime
 import com.bpdlh.pencatatankeuangan.ui.theme.LocalStatusColors
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-
-data class SettingsState(
-    val email: String? = null,
-    val logId: String? = null,
-    val crashReports: Boolean = true,
-    val saveLocation: Boolean = true,
-    val sync: SyncStatus = SyncStatus(),
-    val isBusy: Boolean = false,
-    val message: String? = null,
-    val showSignOutDialog: Boolean = false,
-    val showDeleteAccountDialog: Boolean = false,
-    val signedOut: Boolean = false,
-)
-
-sealed interface SettingsAction {
-    data class OnCrashReportsChange(val enabled: Boolean) : SettingsAction
-    data class OnSaveLocationChange(val enabled: Boolean) : SettingsAction
-    data object OnSignOutClick : SettingsAction
-    data object OnSignOutDiscardConfirm : SettingsAction
-    data object OnSignOutDismiss : SettingsAction
-    data object OnDeleteAccountClick : SettingsAction
-    data object OnDeleteAccountConfirm : SettingsAction
-    data object OnDeleteAccountDismiss : SettingsAction
-}
-
-class SettingsViewModel(private val container: AppContainer) : ViewModel() {
-    private val _state = MutableStateFlow(
-        SettingsState(
-            email = container.auth.currentUser?.email,
-            logId = container.prefs.logId,
-            crashReports = container.prefs.crashReportsEnabled,
-            saveLocation = container.prefs.saveLocationEnabled,
-            sync = container.records.syncStatus.value,
-        ),
-    )
-    val state: StateFlow<SettingsState> = _state.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            container.records.syncStatus.collect { status ->
-                _state.update { it.copy(sync = status, logId = container.prefs.logId) }
-            }
-        }
-    }
-
-    fun onAction(action: SettingsAction) {
-        when (action) {
-            is SettingsAction.OnCrashReportsChange -> {
-                container.setCrashReporting(action.enabled)
-                _state.update { it.copy(crashReports = action.enabled) }
-            }
-            is SettingsAction.OnSaveLocationChange -> {
-                container.prefs.saveLocationEnabled = action.enabled
-                _state.update { it.copy(saveLocation = action.enabled) }
-            }
-            SettingsAction.OnSignOutClick -> signOut()
-            SettingsAction.OnSignOutDiscardConfirm -> signOutDiscardingPending()
-            SettingsAction.OnSignOutDismiss -> _state.update { it.copy(showSignOutDialog = false) }
-            SettingsAction.OnDeleteAccountClick ->
-                _state.update { it.copy(showDeleteAccountDialog = true, message = null) }
-            SettingsAction.OnDeleteAccountConfirm -> deleteAccount()
-            SettingsAction.OnDeleteAccountDismiss -> _state.update { it.copy(showDeleteAccountDialog = false) }
-        }
-    }
-
-    private fun signOut() {
-        if (_state.value.isBusy) return
-        _state.update { it.copy(isBusy = true, message = null) }
-        viewModelScope.launch {
-            when (val result = container.account.signOut()) {
-                is SignOutResult.Done -> _state.update { it.copy(isBusy = false, signedOut = true) }
-                is SignOutResult.PendingUnsynced -> _state.update {
-                    it.copy(
-                        isBusy = false,
-                        showSignOutDialog = true,
-                        message = "Sinkronisasi gagal: ${result.message}",
-                    )
-                }
-            }
-        }
-    }
-
-    private fun signOutDiscardingPending() {
-        _state.update { it.copy(showSignOutDialog = false, isBusy = true) }
-        viewModelScope.launch {
-            container.account.signOutDiscardingPending()
-            _state.update { it.copy(isBusy = false, signedOut = true) }
-        }
-    }
-
-    private fun deleteAccount() {
-        _state.update { it.copy(showDeleteAccountDialog = false, isBusy = true) }
-        viewModelScope.launch {
-            val result = container.account.deleteAccount()
-            _state.update {
-                if (result.isFailure) {
-                    it.copy(isBusy = false, message = result.exceptionOrNull()?.message ?: "Hapus akun gagal.")
-                } else {
-                    it.copy(isBusy = false, signedOut = true)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun SettingsRoot(
     container: AppContainer,
     onBack: () -> Unit,
     onSignedOut: () -> Unit,
-    viewModel: SettingsViewModel = viewModel { SettingsViewModel(container) },
+    viewModel: SettingsViewModel = viewModel {
+        SettingsViewModel(
+            auth = container.auth,
+            records = container.records,
+            account = container.account,
+            prefs = container.prefs,
+            setCrashReporting = container::setCrashReporting,
+        )
+    },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.signedOut) { if (state.signedOut) onSignedOut() }
@@ -190,12 +87,12 @@ fun SettingsScreen(
             IconButton(onClick = onBackClick, modifier = Modifier.size(48.dp)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Kembali",
+                    contentDescription = stringResource(R.string.cd_back),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
-                text = "Pengaturan",
+                text = stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
             )
@@ -207,21 +104,21 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
         ) {
-            SectionLabel("Akun", Modifier.padding(top = 16.dp))
+            SectionLabel(stringResource(R.string.settings_section_account), Modifier.padding(top = 16.dp))
             Text(
-                text = state.email ?: "Belum masuk",
+                text = state.email ?: stringResource(R.string.settings_not_signed_in),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(vertical = 8.dp),
             )
             Text(
-                text = "ID",
+                text = stringResource(R.string.settings_id_label),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             SelectionContainer {
                 Text(
-                    text = state.logId ?: "Belum dibuat. Terbentuk setelah sinkronisasi pertama.",
+                    text = state.logId ?: stringResource(R.string.settings_log_id_missing),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
@@ -229,47 +126,48 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(20.dp))
             Hairline()
-            SectionLabel("Sinkronisasi", Modifier.padding(top = 16.dp))
+            SectionLabel(stringResource(R.string.settings_section_sync), Modifier.padding(top = 16.dp))
             val lastSyncAt = state.sync.lastSyncAt
             val syncText = when {
-                state.sync.running -> "Menyinkronkan"
-                state.sync.lastError != null -> "Gagal: ${state.sync.lastError}"
-                lastSyncAt != null -> "Terakhir ${formatDateTime(lastSyncAt)}"
-                else -> "Belum pernah tersinkron"
+                state.sync.running -> stringResource(R.string.records_syncing)
+                state.sync.lastError != null ->
+                    stringResource(R.string.settings_sync_failed, state.sync.lastError.uiText.asString())
+                lastSyncAt != null -> stringResource(R.string.settings_last_sync, formatDateTime(lastSyncAt))
+                else -> stringResource(R.string.records_never_synced)
             }
             StatusText(
                 text = syncText,
                 color = if (state.sync.lastError != null) MaterialTheme.colorScheme.error else status.muted,
                 modifier = Modifier.padding(vertical = 6.dp),
             )
-
-            TextButton(
+            Button(
                 onClick = { onAction(SettingsAction.OnSignOutClick) },
-
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color.White,
-                    containerColor = Color.Red,
-                ),
-                shape = RoundedCornerShape(5.dp),
+                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 48.dp),
                 enabled = !state.isBusy,
-            ) { Text("Keluar") }
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
+            ) { Text(stringResource(R.string.settings_sign_out), style = MaterialTheme.typography.labelLarge) }
         }
     }
 
     if (state.showSignOutDialog) {
         AlertDialog(
             onDismissRequest = { onAction(SettingsAction.OnSignOutDismiss) },
-            title = { Text("Catatan belum terkirim") },
+            title = { Text(stringResource(R.string.settings_signout_dialog_title)) },
             text = {
-                Text("Masih ada catatan yang gagal dikirim. Keluar sekarang akan menghapus catatan itu dari perangkat ini.")
+                Text(stringResource(R.string.settings_signout_dialog_body))
             },
             confirmButton = {
                 TextButton(onClick = { onAction(SettingsAction.OnSignOutDiscardConfirm) }) {
-                    Text("Keluar dan hapus", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.settings_sign_out_discard), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onAction(SettingsAction.OnSignOutDismiss) }) { Text("Batal") }
+                TextButton(onClick = { onAction(SettingsAction.OnSignOutDismiss) }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
             },
         )
     }

@@ -208,6 +208,23 @@ describe('push dan pull', () => {
     expect(second.records.map((r) => r.id)).toEqual(['rec-2'])
     expect(second.hasMore).toBe(false)
   })
+
+  it('menerapkan 20 catatan dalam satu batch', async () => {
+    const token = await signToken({ sub: 'uid-batch-penuh' })
+    const records = Array.from({ length: 20 }, (_, i) =>
+      record({ id: `rec-${i}`, updatedAt: 1_794_800_000_000 + i }),
+    )
+
+    const result = await push(token, records)
+
+    expect(result.results).toHaveLength(20)
+    expect(result.results.every((r) => r.status === 'applied')).toBe(true)
+    expect(result.serverSeq).toBe(20)
+
+    const pulled = await pull(token)
+    expect(pulled.records).toHaveLength(20)
+    expect(pulled.records.map((r) => r.seq)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1))
+  })
 })
 
 describe('foto', () => {

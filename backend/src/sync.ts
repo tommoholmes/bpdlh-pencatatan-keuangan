@@ -1,6 +1,8 @@
 import type { Env } from './env'
 import { recordSchema, type RecordInput } from './schema'
 
+const BUMP_USER_SEQ = 'UPDATE users SET seq = seq + 1 WHERE id = ?1'
+
 const UPSERT_RECORD = `
 INSERT INTO records (
   user_id, id, name, price, photo_id, latitude, longitude, accuracy_m,
@@ -10,12 +12,19 @@ INSERT INTO records (
   (SELECT seq FROM users WHERE id = ?1)
 )
 ON CONFLICT (user_id, id) DO UPDATE SET
-  name       = CASE WHEN excluded.updated_at > records.updated_at THEN excluded.name       ELSE records.name       END,
-  price      = CASE WHEN excluded.updated_at > records.updated_at THEN excluded.price      ELSE records.price      END,
-  photo_id   = CASE WHEN excluded.updated_at > records.updated_at THEN excluded.photo_id   ELSE records.photo_id   END,
-  deleted_at = CASE WHEN excluded.updated_at > records.updated_at THEN excluded.deleted_at ELSE records.deleted_at END,
-  updated_at = MAX(records.updated_at, excluded.updated_at),
+  name       = excluded.name,
+  price      = excluded.price,
+  photo_id   = excluded.photo_id,
+  deleted_at = excluded.deleted_at,
+  updated_at = excluded.updated_at,
   seq        = excluded.seq
+WHERE excluded.updated_at > records.updated_at
+`
+
+const SYNC_RECORD_SEQ = `
+UPDATE records
+   SET seq = (SELECT seq FROM users WHERE id = ?1)
+ WHERE user_id = ?1 AND id = ?2
 `
 
 interface PushResult {
@@ -45,7 +54,7 @@ export async function pushRecords(env: Env, uid: string, deviceId: string, rawRe
     const deletedAt = rec.deletedAt === null ? null : Math.min(rec.deletedAt, now)
 
     statements.push(
-      env.DB.prepare('UPDATE users SET seq = seq + 1 WHERE id = ?').bind(uid),
+      env.DB.prepare(BUMP_USER_SEQ).bind(uid),
       env.DB
         .prepare(UPSERT_RECORD)
         .bind(
@@ -65,6 +74,7 @@ export async function pushRecords(env: Env, uid: string, deviceId: string, rawRe
           updatedAt,
           deletedAt,
         ),
+      env.DB.prepare(SYNC_RECORD_SEQ).bind(uid, rec.id),
     )
     applied.push(index)
   })

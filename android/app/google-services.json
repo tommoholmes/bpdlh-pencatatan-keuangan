@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "315183333969",
+    "project_id": "bpdlh-pencatatan-keuangan",
+    "storage_bucket": "bpdlh-pencatatan-keuangan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:315183333969:android:1e9fcab123508f10ce6e70",
+        "android_client_info": {
+          "package_name": "com.bpdlh.pencatatankeuangan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "315183333969-072vl33dr0bppas1g6ujn7ngv0ejln5l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bpdlh.pencatatankeuangan",
+            "certificate_hash": "df0ffaba88a542ccc1f9da5a16c1238db950ccad"
+          }
+        },
+        {
+          "client_id": "315183333969-626vlapgpi89n9vj1skmphi3pf71mh4u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bpdlh.pencatatankeuangan",
+            "certificate_hash": "a3b7d0ae03d81cce0d693f07090eeafd395650c9"
+          }
+        },
+        {
+          "client_id": "315183333969-mj8v84030890bcd0c7o5omh1m9hl8ae9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1Tw4vigy5YQv-7eciaLf3M0gVd6g3gOM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "315183333969-mj8v84030890bcd0c7o5omh1m9hl8ae9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

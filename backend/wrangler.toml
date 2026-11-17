@@ -1,0 +1,21 @@
+name = "pencatatan-keuangan"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+# nodejs_compat hanya karena SDK Sentry butuh AsyncLocalStorage.
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[vars]
+FIREBASE_PROJECT_ID = "bpdlh-pencatatan-keuangan"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pencatatan-keuangan"
+database_id = "9b3ca444-f439-4964-a5e4-bef11329a795"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "pencatatan-keuangan-photos"

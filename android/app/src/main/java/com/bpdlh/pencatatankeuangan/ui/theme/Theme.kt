@@ -47,7 +47,6 @@ private val DarkScheme = darkColorScheme(
     onError = Color(0xFF2A0F0A),
 )
 
-/** Warna status tidak ada di ColorScheme Material, jadi diteruskan terpisah. */
 data class StatusColors(val pending: Color, val synced: Color, val muted: Color, val rule: Color)
 
 val LocalStatusColors = staticCompositionLocalOf {
@@ -59,7 +58,6 @@ fun PencatatanTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    // Palet kertas dipakai tetap; dynamic color tidak diaktifkan.
     val scheme = if (darkTheme) DarkScheme else LightScheme
     val status = if (darkTheme) {
         StatusColors(PendingAmberDark, LedgerGreenDark, MutedDark, RuleDark)

@@ -47,10 +47,6 @@ fun StatusText(text: String, color: Color, modifier: Modifier = Modifier) {
     Text(text = text, modifier = modifier, style = MaterialTheme.typography.labelMedium, color = color)
 }
 
-/**
- * Motif aplikasi: satu baris buku kas. Garis rambut di bawah, nama di kiri,
- * harga rata kanan dalam angka tabular.
- */
 @Composable
 fun LedgerRow(
     title: String,
@@ -87,7 +83,6 @@ fun LedgerRow(
     }
 }
 
-/** Keadaan kosong, gagal, dan belum masuk memakai blok yang sama supaya bahasanya konsisten. */
 @Composable
 fun MessageBlock(
     title: String,

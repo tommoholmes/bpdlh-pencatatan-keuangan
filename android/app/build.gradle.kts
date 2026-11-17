@@ -8,8 +8,6 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
-// Nilai build yang dipakai bersama. Sentry: `sentry.dsn` (rilis) dan `sentry.dsn.debug` (debug)
-// diisi di local.properties. Kosong berarti SDK tidak mengirim apa pun.
 val localProperties = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
@@ -30,7 +28,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Web client ID dari google-services.json; GetGoogleIdOption menolak client tipe Android.
         buildConfigField(
             "String",
             "WEB_CLIENT_ID",
@@ -40,22 +37,18 @@ android {
 
     buildTypes {
         debug {
-            // Penanda di luar layar aplikasi: nama peluncur dan versi.
             versionNameSuffix = "-debug"
             resValue("string", "app_name", "Pencatatan Debug")
-            // Base URL debug boleh diarahkan ke Worker lain lewat `api.baseUrl.debug`; bawaan tetap produksi.
             buildConfigField(
                 "String",
                 "API_BASE_URL",
                 "\"${localProperties.getProperty("api.baseUrl.debug", prodApiBaseUrl)}\"",
             )
-            // Crash build debug tidak masuk ke proyek Sentry rilis.
             buildConfigField("String", "SENTRY_DSN", "\"${localProperties.getProperty("sentry.dsn.debug", "")}\"")
         }
         release {
             buildConfigField("String", "API_BASE_URL", "\"$prodApiBaseUrl\"")
             buildConfigField("String", "SENTRY_DSN", "\"${localProperties.getProperty("sentry.dsn", "")}\"")
-            // R8 dimatikan sampai unggahan mapping R8 tersedia, supaya stack trace Sentry tetap terbaca.
             optimization {
                 enable = false
             }

@@ -10,10 +10,6 @@ sealed interface SyncOutcome {
     data class Failed(val message: String) : SyncOutcome
 }
 
-/**
- * Satu siklus: unggah foto, kirim catatan, lalu tarik perubahan. Foto lebih dulu supaya
- * perangkat lain tidak pernah menerima catatan yang fotonya belum ada.
- */
 class SyncEngine(
     private val dao: RecordDao,
     private val syncStateDao: SyncStateDao,
@@ -39,12 +35,10 @@ class SyncEngine(
             for (result in response.results) {
                 val sent = queue.firstOrNull { it.id == result.id } ?: continue
                 if (result.status == "applied") {
-                    // Hanya ditandai synced bila catatan belum diedit lagi sejak dikirim.
                     dao.markStatusIfUnchanged(sent.id, sent.updatedAt, SYNC_SYNCED)
                     pushed++
                 } else {
                     dao.markStatusIfUnchanged(sent.id, sent.updatedAt, SYNC_FAILED)
-                    // Hanya kode alasan yang dikirim; nama, harga, dan koordinat tidak pernah ikut.
                     if (io.sentry.Sentry.isEnabled()) {
                         io.sentry.Sentry.captureMessage(
                             "catatan ditolak: ${result.reason ?: "tanpa alasan"}",

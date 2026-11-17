@@ -7,10 +7,6 @@ const val SYNC_PENDING = "pending"
 const val SYNC_SYNCED = "synced"
 const val SYNC_FAILED = "failed"
 
-/**
- * Satu-satunya entitas. Nama kolom mengikuti skema server; kolom lokal
- * (`syncStatus`, `photoPath`) hanya ada di perangkat.
- */
 @Entity(tableName = "records")
 data class Record(
     @PrimaryKey val id: String,

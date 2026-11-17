@@ -5,20 +5,15 @@ import com.bpdlh.pencatatankeuangan.auth.AuthRepository
 sealed interface SignOutResult {
     data object Done : SignOutResult
 
-    /** Masih ada catatan yang gagal dikirim; data lokal hanya boleh dihapus setelah pengguna setuju. */
     data class PendingUnsynced(val message: String) : SignOutResult
 }
 
-/**
- * Siklus sesi milik Model: ViewModel hanya memanggil ini, tidak pernah menyentuh sync engine.
- * Logout menyinkronkan catatan `pending` lebih dulu; hapus akun menghapus server lalu Auth.
- */
 class AccountManager(
     private val auth: AuthRepository,
     private val records: RecordsRepository,
     private val sync: SyncCoordinator,
 ) {
-    /** Dipakai WorkManager: satu siklus sinkronisasi penuh. */
+
     suspend fun syncPending(): SyncOutcome = sync.syncNow()
 
     suspend fun signOut(): SignOutResult {

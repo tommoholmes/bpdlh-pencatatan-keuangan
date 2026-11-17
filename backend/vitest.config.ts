@@ -6,7 +6,6 @@ export default defineConfig({
     cloudflareTest(async () => ({
       wrangler: { configPath: './wrangler.toml' },
       miniflare: {
-        // FIREBASE_PROJECT_ID tidak di-override: nilai dari wrangler.toml yang dipakai.
         bindings: { TEST_MIGRATIONS: await readD1Migrations('./migrations') },
       },
     })),

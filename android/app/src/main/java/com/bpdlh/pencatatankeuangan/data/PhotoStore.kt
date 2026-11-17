@@ -11,10 +11,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
 
-/**
- * Foto disimpan di folder privat aplikasi. Menulis ulang gambar sekaligus membuang EXIF
- * (termasuk GPS bawaan foto); satu-satunya lokasi yang tersimpan adalah field lat/long.
- */
 class PhotoStore(private val context: Context) {
     private val dir: File by lazy { File(context.filesDir, "photos").apply { mkdirs() } }
 

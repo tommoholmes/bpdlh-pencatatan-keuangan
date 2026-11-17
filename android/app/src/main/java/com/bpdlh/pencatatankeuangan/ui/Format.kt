@@ -19,13 +19,11 @@ fun formatDate(millis: Long): String = dateFormat.format(Date(millis))
 
 fun formatClock(millis: Long): String = clockFormat.format(Date(millis))
 
-// Titik desimal wajib di sini: intent geo: hanya menerima format itu.
 fun formatCoordinate(latitude: Double, longitude: Double): String =
     String.format(Locale.ROOT, "%.5f, %.5f", latitude, longitude)
 
 fun formatAccuracy(meters: Double): String = "${Math.round(meters)} m"
 
-/** Hanya digit, maksimal 12 angka supaya harga tetap masuk akal untuk rupiah. */
 fun priceDigits(raw: String): String = raw.filter { it.isDigit() }.take(12)
 
 fun parsePrice(digits: String): Long? = digits.toLongOrNull()
@@ -34,7 +32,6 @@ fun summaryLine(count: Int, total: Long): String = "$count catatan · ${formatRu
 
 private const val STALE_AFTER_MS = 24L * 60 * 60 * 1000
 
-/** Peringatan hanya untuk catatan yang sudah lebih dari sehari belum terkirim. */
 fun pendingStaleWarning(oldestPendingAt: Long?, now: Long): String? =
     if (oldestPendingAt != null && oldestPendingAt < now - STALE_AFTER_MS) {
         "Catatan ini belum terkirim lebih dari sehari. Selama belum tersinkron, datanya hanya ada di perangkat ini."

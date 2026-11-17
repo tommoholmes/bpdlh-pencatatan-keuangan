@@ -8,10 +8,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object RecordsRoute : NavKey
 
-/**
- * Nav graph fitur ini. Tujuan fitur lain hanya lewat callback, jadi modul fitur
- * tidak perlu tahu route fitur lain.
- */
 fun EntryProviderScope<NavKey>.recordsGraph(
     container: AppContainer,
     onOpenRecord: (String) -> Unit,

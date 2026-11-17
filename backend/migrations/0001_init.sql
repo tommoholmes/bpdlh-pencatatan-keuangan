@@ -1,8 +1,8 @@
 CREATE TABLE users (
-  id         TEXT PRIMARY KEY,           -- uid dari ID token Firebase
+  id         TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL,
-  seq        INTEGER NOT NULL DEFAULT 0, -- counter perubahan per pengguna
-  log_id     TEXT    NOT NULL            -- ID acak untuk log, bukan turunan uid
+  seq        INTEGER NOT NULL DEFAULT 0,
+  log_id     TEXT    NOT NULL
 );
 
 CREATE TABLE records (

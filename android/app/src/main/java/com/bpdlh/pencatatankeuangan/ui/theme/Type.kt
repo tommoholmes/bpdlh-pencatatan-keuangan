@@ -6,7 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Serif untuk judul, sans untuk isi, mono tabular untuk harga.
 val Typography = Typography(
     headlineMedium = TextStyle(
         fontFamily = FontFamily.Serif,
@@ -54,7 +53,6 @@ val Typography = Typography(
     ),
 )
 
-/** Harga selalu memakai gaya ini: mono, tabular, rata kanan. */
 val AmountTextStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
     fontWeight = FontWeight.Medium,

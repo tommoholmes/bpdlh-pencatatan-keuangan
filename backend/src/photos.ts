@@ -4,7 +4,6 @@ export const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
 const isJpeg = (bytes: Uint8Array) => bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
 
-/** Kunci selalu berawalan uid dari token, jadi pengguna tidak bisa menyentuh foto pengguna lain. */
 const photoKey = (uid: string, photoId: string) => `${uid}/${photoId}.jpg`
 
 export async function putPhoto(env: Env, uid: string, photoId: string, req: Request): Promise<Response> {
@@ -41,7 +40,6 @@ export async function getPhoto(env: Env, uid: string, photoId: string): Promise<
   })
 }
 
-/** Hapus semua data pengguna: seluruh objek R2 di bawah `{uid}/` lalu baris D1. */
 export async function deleteUserData(env: Env, uid: string): Promise<void> {
   let cursor: string | undefined
   do {

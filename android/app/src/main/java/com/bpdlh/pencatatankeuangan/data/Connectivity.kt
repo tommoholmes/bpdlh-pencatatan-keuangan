@@ -7,10 +7,6 @@ import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Internet yang benar-benar bisa dipakai: jaringan bawaan tersambung dan sudah divalidasi sistem.
- * Wi-Fi tanpa akses internet (portal captive) dihitung offline, sama seperti yang dialami OkHttp.
- */
 class Connectivity(context: Context) {
     private val manager = context.getSystemService(ConnectivityManager::class.java)
     private val _online = MutableStateFlow(manager.isOnline())

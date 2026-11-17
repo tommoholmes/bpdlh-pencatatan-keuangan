@@ -23,10 +23,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Menjalankan layar sungguhan dengan database perangkat, tanpa login. Membuktikan keadaan kosong,
- * keadaan berisi, validasi editor, dan tombol yang benar-benar bekerja.
- */
 @RunWith(AndroidJUnit4::class)
 class ScreenTest {
     @get:Rule

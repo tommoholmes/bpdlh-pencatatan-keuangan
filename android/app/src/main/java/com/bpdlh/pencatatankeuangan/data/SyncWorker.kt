@@ -31,7 +31,6 @@ object SyncScheduler {
 
     private val networkOnly = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-    /** Dipakai saat aplikasi dibuka, koneksi kembali, dan beberapa detik setelah menyimpan. */
     fun requestNow(context: Context) {
         val request = OneTimeWorkRequestBuilder<SyncWorker>()
             .setInitialDelay(3, TimeUnit.SECONDS)

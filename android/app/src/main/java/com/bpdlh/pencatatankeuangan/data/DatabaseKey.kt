@@ -10,10 +10,6 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/**
- * Kunci database SQLCipher dibuat acak sekali, lalu dibungkus kunci AES dari Android Keystore.
- * Kunci Keystore tidak ikut Auto Backup, jadi di perangkat baru database dibuat ulang lalu diisi dari D1.
- */
 class DatabaseKey(context: Context) {
     private val prefs = context.getSharedPreferences("db_key", Context.MODE_PRIVATE)
 

@@ -3,7 +3,6 @@ package com.bpdlh.pencatatankeuangan.data
 import android.content.Context
 import java.util.UUID
 
-/** Setelan pengguna dan identitas perangkat. */
 class Prefs(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
@@ -15,7 +14,6 @@ class Prefs(context: Context) {
         get() = prefs.getString(KEY_LOG_ID, null)
         set(value) = prefs.edit().putString(KEY_LOG_ID, value).apply()
 
-    /** Laporan masalah aktif sejak aplikasi pertama dipakai; penguji bisa mematikannya. */
     var crashReportsEnabled: Boolean
         get() = prefs.getBoolean(KEY_CRASH, true)
         set(value) = prefs.edit().putBoolean(KEY_CRASH, value).apply()

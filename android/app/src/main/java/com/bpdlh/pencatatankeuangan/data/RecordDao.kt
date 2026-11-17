@@ -31,7 +31,6 @@ interface RecordDao {
     @Query("UPDATE records SET photoPath = :path WHERE id = :id")
     suspend fun setPhotoPath(id: String, path: String?)
 
-    /** Baris yang masih `pending` dilewati: versi pemenangnya akan tiba lagi di pull berikutnya. */
     @Transaction
     suspend fun applyRemote(rows: List<Record>) {
         for (row in rows) {

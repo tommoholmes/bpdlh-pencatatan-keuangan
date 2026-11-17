@@ -1,7 +1,7 @@
 name = "pencatatan-keuangan"
 main = "src/index.ts"
 compatibility_date = "2025-09-01"
-# nodejs_compat hanya karena SDK Sentry butuh AsyncLocalStorage.
+
 compatibility_flags = ["nodejs_compat"]
 
 [observability]

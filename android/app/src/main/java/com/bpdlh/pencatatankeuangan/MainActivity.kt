@@ -21,7 +21,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        // Pemicu sinkronisasi: aplikasi dibuka.
         if ((application as PencatatanApp).container.auth.currentUser != null) {
             SyncScheduler.requestNow(this)
         }

@@ -1,7 +1,6 @@
 import type { Env } from './env'
 import { recordSchema, type RecordInput } from './schema'
 
-/** Satu upsert per catatan: `seq` selalu naik, isi hanya berubah bila `updatedAt` kiriman lebih baru. */
 const UPSERT_RECORD = `
 INSERT INTO records (
   user_id, id, name, price, photo_id, latitude, longitude, accuracy_m,
@@ -42,7 +41,6 @@ export async function pushRecords(env: Env, uid: string, deviceId: string, rawRe
       return
     }
     const rec: RecordInput = parsed.data
-    // Jam perangkat bisa terlalu maju: batasi ke jam server.
     const updatedAt = Math.min(rec.updatedAt, now)
     const deletedAt = rec.deletedAt === null ? null : Math.min(rec.deletedAt, now)
 

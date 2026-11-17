@@ -3,8 +3,6 @@ import type { KeyStorer } from 'firebase-auth-cloudflare-workers'
 import type { MiddlewareHandler } from 'hono'
 import type { Env } from './env'
 
-// Cache kunci publik di memori isolate (tanpa binding KV). TTL mengikuti `max-age`
-// yang dikirim library; sertifikat Firebase dirotasi berkala.
 let cached: { json: string; expiresAt: number } | null = null
 
 const keyStore: KeyStorer = {
@@ -17,10 +15,6 @@ const keyStore: KeyStorer = {
   },
 }
 
-/**
- * Verifikasi ID token Firebase. Hasilnya diambil dengan `getFirebaseToken(c)`;
- * token tidak sah dilempar sebagai HTTPException 401.
- */
 export const firebaseAuth: MiddlewareHandler<{ Bindings: Env }> = (c, next) =>
   verifyFirebaseAuth({
     projectId: c.env.FIREBASE_PROJECT_ID,

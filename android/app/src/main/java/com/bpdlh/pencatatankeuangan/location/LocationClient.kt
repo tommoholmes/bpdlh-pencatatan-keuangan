@@ -11,10 +11,6 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * Lokasi diambil sekali saat form dibuka, bukan terus-menerus. Izin ditolak, GPS mati, atau
- * waktu habis berarti lat dan long kosong; catatan tetap tersimpan.
- */
 class LocationClient(private val context: Context) {
     private val client by lazy { LocationServices.getFusedLocationProviderClient(context) }
 

@@ -104,7 +104,6 @@ class EditorViewModel(
     val state: StateFlow<EditorState> = _state.asStateFlow()
 
     init {
-        // Nama dan harga dipulihkan setelah proses mati; foto dan lokasi dibaca ulang dari database.
         _state.update {
             it.copy(
                 name = savedStateHandle[KEY_NAME] ?: "",
@@ -223,8 +222,6 @@ fun EditorRoot(
     recordId: String?,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
-    // createSavedStateHandle() memakai SavedStateRegistry milik entri back stack, jadi isian
-    // formulir bertahan setelah proses mati.
     viewModel: EditorViewModel = viewModel(key = recordId ?: "new") {
         EditorViewModel(container, recordId, createSavedStateHandle())
     },

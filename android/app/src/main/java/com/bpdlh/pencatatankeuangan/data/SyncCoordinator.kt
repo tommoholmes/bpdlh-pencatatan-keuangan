@@ -11,7 +11,6 @@ data class SyncStatus(
     val lastError: String? = null,
 )
 
-/** Satu siklus sinkronisasi dalam satu waktu, dipanggil dari UI maupun WorkManager. */
 class SyncCoordinator(private val engine: SyncEngine, private val prefs: Prefs) {
     private val mutex = Mutex()
     private val _status = MutableStateFlow(SyncStatus(lastSyncAt = prefs.lastSyncAt, lastError = prefs.lastSyncError))

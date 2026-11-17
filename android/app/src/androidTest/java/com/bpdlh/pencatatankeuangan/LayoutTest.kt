@@ -22,10 +22,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Semua konten harus berada di dalam lebar layar pada lebar berapa pun. Ini menangkap
- * teks yang meluber dan elemen yang terpotong, yang tidak terlihat di pratinjau lebar.
- */
 @RunWith(AndroidJUnit4::class)
 class LayoutTest {
     @get:Rule

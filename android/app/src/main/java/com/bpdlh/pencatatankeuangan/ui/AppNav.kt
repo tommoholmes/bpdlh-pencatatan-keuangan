@@ -25,10 +25,6 @@ import io.sentry.Breadcrumb
 import io.sentry.Sentry
 import io.sentry.SentryLevel
 
-/**
- * Semua nav graph fitur dirakit di sini. Navigasi antar fitur hanya lewat lambda,
- * jadi fitur tidak saling mengimpor route.
- */
 @Composable
 fun PencatatanNav(container: AppContainer) {
     val start = remember { if (container.auth.currentUser != null) RecordsRoute else LoginRoute }
@@ -45,7 +41,6 @@ fun PencatatanNav(container: AppContainer) {
         }
     }
 
-    // Perpindahan layar dicatat manual karena dukungan otomatis SDK untuk Navigation 3 belum ada.
     LaunchedEffect(backStack.lastOrNull()) {
         if (Sentry.isEnabled()) {
             Sentry.addBreadcrumb(

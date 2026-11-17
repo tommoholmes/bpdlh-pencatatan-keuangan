@@ -36,10 +36,6 @@ class RecordsRepository(
         return fresh
     }
 
-    /**
-     * Menulis catatan dan menandainya `pending` dalam satu transaksi lokal. UI langsung berubah
-     * tanpa menunggu server. Lokasi dan info perangkat hanya diisi saat catatan dibuat.
-     */
     suspend fun save(
         existingId: String?,
         name: String,
@@ -109,7 +105,6 @@ class RecordsRepository(
         scheduleSync()
     }
 
-    /** Dipakai saat logout dan hapus akun: database lokal dan foto ikut dihapus. */
     suspend fun wipeLocal() {
         dao.clearRecords()
         syncStateDao.save(SyncState(lastPullSeq = 0, deviceId = prefs.deviceId))
@@ -117,14 +112,12 @@ class RecordsRepository(
         prefs.clearSession()
     }
 
-    /** Foto dari perangkat lain diunduh saat pertama ditampilkan, lalu disimpan lokal. */
     suspend fun ensurePhoto(record: Record): String? {
         record.photoPath?.let { if (java.io.File(it).exists()) return it }
         val photoId = record.photoId ?: return null
         val bytes = api.getPhoto(photoId)
         return photos.save(bytes, photoId).also { dao.setPhotoPath(record.id, it) }
     }
-
 
     suspend fun storePhoto(bytes: ByteArray, photoId: String, recordId: String) {
         val path = photos.save(bytes, photoId)

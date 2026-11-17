@@ -54,11 +54,9 @@ class AppContainer(private val context: Context) {
     val location = LocationClient(context)
     val account = AccountManager(auth, records, syncCoordinator)
 
-    /** Laporan masalah aktif secara default; mematikannya menutup SDK sepenuhnya. */
     fun setCrashReporting(enabled: Boolean) {
         prefs.crashReportsEnabled = enabled
         val dsn = BuildConfig.SENTRY_DSN
-        // Sentry menolak DSN kosong, jadi tanpa DSN SDK tidak pernah dinyalakan.
         if (!enabled || dsn.isBlank()) {
             if (Sentry.isEnabled()) Sentry.close()
             return
@@ -69,7 +67,6 @@ class AppContainer(private val context: Context) {
             options.isSendDefaultPii = false
             options.tracesSampleRate = 0.1
             options.environment = if (BuildConfig.DEBUG) "debug" else "release"
-            // Yang tidak boleh tercatat: nama, harga, foto, koordinat, token, isi body.
             options.beforeBreadcrumb = { breadcrumb, _ ->
                 if (breadcrumb.category == "http") null else breadcrumb
             }

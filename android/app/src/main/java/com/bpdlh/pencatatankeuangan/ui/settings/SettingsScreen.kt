@@ -116,7 +116,6 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    /** Model yang menyinkronkan catatan pending; ViewModel hanya menerima hasilnya. */
     private fun signOut() {
         if (_state.value.isBusy) return
         _state.update { it.copy(isBusy = true, message = null) }

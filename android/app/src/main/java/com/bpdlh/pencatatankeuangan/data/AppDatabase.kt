@@ -13,12 +13,8 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 object DatabaseFactory {
-    /**
-     * Database lokal terenkripsi SQLCipher. Kunci acak dibuat saat pertama dipakai dan
-     * disimpan terbungkus Android Keystore (lihat [DatabaseKey]).
-     */
+
     fun open(context: Context, passphrase: ByteArray): AppDatabase {
-        // sqlcipher-android tidak memuat pustaka aslinya sendiri; tanpa baris ini open() melempar UnsatisfiedLinkError.
         System.loadLibrary("sqlcipher")
         return Room.databaseBuilder(context, AppDatabase::class.java, "pencatatan.db")
             .openHelperFactory(SupportOpenHelperFactory(passphrase))

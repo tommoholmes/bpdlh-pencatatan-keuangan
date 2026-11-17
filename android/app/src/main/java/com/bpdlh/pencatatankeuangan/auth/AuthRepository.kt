@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-/** Login hanya lewat Google. Tidak ada metode lain. */
 class AuthRepository(
     private val context: Context,
     private val api: SyncApi,
@@ -67,14 +66,12 @@ class AuthRepository(
         Result.failure(IllegalStateException("Login Google gagal. Periksa koneksi lalu coba lagi."))
     }
 
-    /** Membuat baris `users` di server bila belum ada dan menyimpan `log_id` untuk dukungan. */
     suspend fun bootstrap(): Result<Unit> = try {
         val logId = api.bootstrap()
         prefs.logId = logId
         if (io.sentry.Sentry.isEnabled()) {
             io.sentry.Sentry.setUser(io.sentry.protocol.User().apply { id = logId })
         }
-        // Login pertama perlu menarik data yang sudah ada di server.
         SyncScheduler.requestNow(context)
         Result.success(Unit)
     } catch (e: Exception) {
@@ -86,7 +83,6 @@ class AuthRepository(
         prefs.clearSession()
     }
 
-    /** Urutan wajib: hapus data server lebih dulu, baru akun Auth (token tidak valid setelahnya). */
     suspend fun deleteAccount(): Result<Unit> = try {
         api.deleteAccount()
         firebase.currentUser?.delete()?.await()

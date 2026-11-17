@@ -60,7 +60,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-/** Satu baris buku kas, sudah diformat untuk ditampilkan. */
 data class RecordUi(
     val id: String,
     val name: String,
@@ -101,7 +100,6 @@ sealed interface RecordsAction {
 class RecordsViewModel(container: AppContainer) : ViewModel() {
     private val retry = MutableStateFlow(0)
 
-    // Cold flow dibangun ulang setiap "Coba lagi" supaya kegagalan baca database benar-benar diulang.
     private val records: Flow<Result<List<Record>>> = retry.flatMapLatest {
         container.records.observeActive()
             .map<List<Record>, Result<List<Record>>> { Result.success(it) }
@@ -123,7 +121,6 @@ class RecordsViewModel(container: AppContainer) : ViewModel() {
             pendingCount = pending,
             sync = sync,
             online = online,
-            // Peringatan dihitung dari catatan `pending` tertua.
             pendingWarning = pendingStaleWarning(
                 rows.filter { it.syncStatus == SYNC_PENDING }.minOfOrNull { it.updatedAt },
                 System.currentTimeMillis(),
@@ -294,7 +291,6 @@ private fun SyncLine(state: RecordsState, modifier: Modifier = Modifier) {
     )
 }
 
-/** Titik dan kata: hijau berarti permintaan bisa keluar sekarang, redup berarti tidak. */
 @Composable
 private fun ConnectionLabel(online: Boolean, modifier: Modifier = Modifier) {
     val status = LocalStatusColors.current

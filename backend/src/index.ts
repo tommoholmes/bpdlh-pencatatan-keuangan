@@ -18,7 +18,6 @@ app.use('*', (c, next) =>
   ),
 )
 
-// Satu log ringkasan per request. Tidak pernah memuat nama, harga, koordinat, foto, token, atau body.
 app.use('*', async (c, next) => {
   const started = Date.now()
   const syncId = c.req.header('x-sync-id')
@@ -38,8 +37,6 @@ app.use('*', async (c, next) => {
   )
 })
 
-// Verifikasi ID token (401 bila tidak sah), lalu pastikan baris `users` ada
-// (idempoten; sekaligus bootstrap). Hanya akun Google yang diterima.
 app.use('/v1/*', firebaseAuth)
 app.use('/v1/*', async (c, next) => {
   const token = getFirebaseToken(c)
@@ -102,12 +99,10 @@ app.delete('/v1/me', async (c) => {
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    // Gagal mengambil kunci publik Firebase = gangguan upstream, bukan token tidak sah.
     if (err.cause instanceof Error && err.cause.message.includes('public keys')) {
       Sentry.captureException(err.cause)
       return c.json({ error: 'internal' }, 500)
     }
-    // Middleware auth memakai 400 untuk header kosong; kontrak API tetap 401.
     return c.json({ error: 'unauthorized' }, 401)
   }
 

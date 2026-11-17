@@ -6,7 +6,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Kontrak JSON dengan Worker: nama field harus sama persis dengan yang dibaca server. */
 class DtoContractTest {
     private val json = Json { ignoreUnknownKeys = true }
 

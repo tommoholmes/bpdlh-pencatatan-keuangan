@@ -2,7 +2,6 @@ package com.bpdlh.pencatatankeuangan.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Kertas gading, tinta, satu aksen hijau buku kas.
 val Paper = Color(0xFFFBFAF7)
 val Sheet = Color(0xFFFFFFFF)
 val Ink = Color(0xFF17181A)

@@ -12,10 +12,6 @@ import java.util.concurrent.TimeUnit
 
 class ApiException(val status: Int, message: String) : IOException(message)
 
-/**
- * Satu-satunya jalur ke Worker. Setiap request membawa ID token Firebase terbaru;
- * `uid` tidak pernah dikirim dari klien.
- */
 class SyncApi(
     private val baseUrl: String,
     private val tokenProvider: suspend () -> String?,

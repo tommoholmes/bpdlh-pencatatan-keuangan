@@ -4,9 +4,6 @@ import com.bpdlh.pencatatankeuangan.data.remote.ApiException
 import java.io.IOException
 import java.net.UnknownHostException
 
-/**
- * Pesan untuk pengguna. Pesan mentah OkHttp ("HTTP 500: ...") tidak pernah ditampilkan.
- */
 fun syncErrorMessage(error: Throwable): String = when {
     error is ApiException && error.status == 401 -> "Sesi berakhir. Masuk ulang dengan Google."
     error is ApiException && error.status == 413 -> "Foto lebih dari 5 MB. Ganti dengan foto yang lebih kecil."

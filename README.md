@@ -12,9 +12,9 @@ Aplikasi catatan pengeluaran pribadi: klien Android offline-first, backend Cloud
 ## Fitur
 
 - Catat pengeluaran dengan nama, harga, foto, dan lokasi.
-- Simpan menggunakan sqlite 
+- Simpan menggunakan SQLite
 - Sinkronisasi otomatis: setelah menyimpan, saat aplikasi dibuka, saat jaringan ada, dan per 15 menit sekali.
-- Lokasi dan info perangkat diisi sekali saat user melakukan allow permision dan di lakukan sekali pada saat menyimpan
+- Lokasi dan info perangkat diisi sekali saat pengguna memberi izin, lalu disimpan sekali saat catatan disimpan.
 - Layar pengaturan berisi status informasi akun, keluar.
 
 ## Menjalankan

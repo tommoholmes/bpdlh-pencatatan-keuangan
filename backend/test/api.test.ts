@@ -5,11 +5,9 @@ import certPem from './fixtures/cert.pem?raw'
 import keyPem from './fixtures/key.pem?raw'
 
 const KID = 'test-kid'
-// Sama dengan FIREBASE_PROJECT_ID di wrangler.toml; nilai dari wrangler menang atas bindings miniflare.
 const PROJECT_ID = env.FIREBASE_PROJECT_ID
 const privateKey = await importPKCS8(keyPem, 'RS256')
 
-// Semua keluar jaringan diblokir; hanya endpoint sertifikat Firebase yang dilayani.
 beforeAll(() => {
   vi.stubGlobal('fetch', async (input: unknown) => {
     const url =
@@ -17,7 +15,6 @@ beforeAll(() => {
     if (!url.startsWith('https://www.googleapis.com/robot/v1/metadata/jwk/')) {
       throw new Error(`fetch tidak diharapkan: ${url}`)
     }
-    // Library mengubah sertifikat X.509 menjadi JWK sendiri.
     return new Response(JSON.stringify({ [KID]: certPem }), {
       headers: { 'cache-control': 'max-age=0' },
     })
@@ -135,14 +132,12 @@ describe('push dan pull', () => {
     const token = await signToken({ sub: 'uid-lww' })
     await push(token, [record({ name: 'Baru', updatedAt: 1_794_800_000_000 })])
 
-    // Kiriman lama: nama tidak berubah, tetapi seq naik supaya versi menang terkirim ulang.
     const stale = await push(token, [record({ name: 'Lama', updatedAt: 1_794_700_000_000 })])
     expect(stale.serverSeq).toBe(2)
 
     let pulled = await pull(token)
     expect(pulled.records[0]).toMatchObject({ name: 'Baru', seq: 2 })
 
-    // Kiriman lebih baru: nama ikut berubah.
     await push(token, [record({ name: 'Lebih baru', updatedAt: 1_794_900_000_000 })])
     pulled = await pull(token)
     expect(pulled.records[0]).toMatchObject({ name: 'Lebih baru', seq: 3 })

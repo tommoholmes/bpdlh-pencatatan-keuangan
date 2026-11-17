@@ -17,7 +17,7 @@ Aplikasi catatan pengeluaran pribadi: klien Android offline-first, backend Cloud
 - Lokasi dan info perangkat diisi sekali saat pengguna memberi izin, lalu disimpan sekali saat catatan disimpan.
 - Layar pengaturan berisi status informasi akun, keluar.
 
-## Menjalankan
+## Setup
 
 Backend:
 

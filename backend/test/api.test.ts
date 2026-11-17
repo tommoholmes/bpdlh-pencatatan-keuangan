@@ -136,6 +136,7 @@ describe('push dan pull', () => {
     expect(stale.serverSeq).toBe(2)
 
     const pulled = await pull(token)
+    expect(pulled.records).toHaveLength(1)
     expect(pulled.records[0]).toMatchObject({ name: 'Kedua', updatedAt: 1_794_700_000_000, seq: 2 })
   })
 
@@ -145,6 +146,7 @@ describe('push dan pull', () => {
     await push(token, [record({ name: 'Kedua', updatedAt: 1_794_800_000_000 })])
 
     const pulled = await pull(token)
+    expect(pulled.records).toHaveLength(1)
     expect(pulled.records[0]?.name).toBe('Kedua')
   })
 

@@ -4,20 +4,13 @@ import { recordSchema, type RecordInput } from './schema'
 const BUMP_USER_SEQ = 'UPDATE users SET seq = seq + 1 WHERE id = ?1'
 
 const UPSERT_RECORD = `
-INSERT INTO records (
+INSERT OR REPLACE INTO records (
   user_id, id, name, price, photo_id, latitude, longitude, accuracy_m,
   device_id, device_model, os_version, app_version, created_at, updated_at, deleted_at, seq
 ) VALUES (
   ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15,
   (SELECT seq FROM users WHERE id = ?1)
 )
-ON CONFLICT (user_id, id) DO UPDATE SET
-  name       = excluded.name,
-  price      = excluded.price,
-  photo_id   = excluded.photo_id,
-  deleted_at = excluded.deleted_at,
-  updated_at = excluded.updated_at,
-  seq        = excluded.seq
 `
 
 interface PushResult {
